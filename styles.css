@@ -1,0 +1,2520 @@
+/* ═══════════════════════════════════════════════════════════════
+   ALTER
+   Written once, in order. No !important, no rule fighting another rule.
+
+   The old file was 948 lines with 26 !important overrides and 21
+   competing rules for the same list. That is why the numbers rendered
+   as "1. 01" and the pills ran together: rules were cancelling each
+   other out. This is a rewrite, not another patch.
+
+   Order: tokens, reset, type, layout, components, responsive.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── TOKENS ───────────────────────────────────────────────────── */
+:root{
+  /* Sage sampled from the app icon. Do not "improve" this. */
+  --sage:#8A9179;
+  --sage-d:#717861;      /* white text passes WCAG AA at 4.60:1 */
+  --sage-l:#C9CCC1;
+  --sage-xl:#E7E8E3;
+
+  --cream:#EDE8E0;
+  --page:#F5F2EC;
+  --card:#FCFAF6;      /* warm near-white. NOT #FFF: pure white is not in this
+                          palette, it is the absence of it, and it punched a
+                          hole in every page it appeared on. */
+  --sand:#E8E4DA;
+  --panel:#35382E;
+  --panel-2:#3F4336;
+
+  --ink:#2B2D26;
+  --ink-2:#5A5F4E;
+  --ink-3:#8A8E7D;
+  --muted:#B6BAAB;
+
+  --line:#E4E0D6;
+  --line-d:#4A4F41;
+
+  --shadow:0 1px 2px rgba(43,45,38,.04), 0 14px 44px rgba(43,45,38,.07);
+  --shadow-lg:0 20px 60px rgba(43,45,38,.16);
+
+  /* one spacing scale. every gap on the site is one of these. */
+  --s1:8px;  --s2:16px; --s3:24px; --s4:32px;
+  --s5:48px; --s6:64px; --s7:88px; --s8:112px;
+
+  --wrap:1120px;
+}
+
+/* ── RESET ────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
+body{
+  font-family:'Hanken Grotesk',-apple-system,sans-serif;
+  font-weight:300;
+  background:var(--page);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+
+/* every list on this site is unstyled unless it says otherwise.
+   this is the rule that stops "1. 01" from happening. */
+ul,ol{list-style:none}
+
+:focus-visible{outline:2px solid var(--sage-d);outline-offset:3px;border-radius:4px}
+
+/* ── TYPE ─────────────────────────────────────────────────────── */
+h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(34px,5vw,56px);
+  font-weight:400;
+  line-height:1.08;
+  letter-spacing:-.02em;
+  text-transform:none;
+}
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(25px,3vw,34px);
+  font-weight:400;
+  line-height:1.15;
+  letter-spacing:-.02em;
+  text-transform:none;
+}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:19px;
+  font-weight:500;
+  letter-spacing:-.01em;
+  text-transform:none;
+}
+h1 em,h2 em{font-style:normal;color:var(--sage);font-weight:400}
+
+.kicker{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.4em;
+  text-transform:uppercase;
+  color:var(--sage-d);
+}
+
+/* the only horizontal line on the page. one per section, under the
+   kicker. everything else uses space, not lines. */
+.rule{width:36px;height:1px;background:var(--sage);margin:14px auto var(--s3)}
+
+.lede{font-size:17px;line-height:1.8;color:var(--ink-2)}
+.sub{font-size:16px;line-height:1.8;color:var(--ink-2)}
+.wrap.center > .sub{max-width:600px;margin-left:auto;margin-right:auto}
+/* Keep centered sections readable: the whole centered column has a sensible
+   max width so headings and paragraphs never stretch edge to edge on desktop. */
+.wrap.center > h1,
+.wrap.center > h2,
+.wrap.center > p{max-width:640px;margin-left:auto;margin-right:auto}
+.fine{font-size:13px;line-height:1.6;color:var(--ink-3)}
+
+/* ── LAYOUT ───────────────────────────────────────────────────── */
+/* everything is centred. no exceptions, so nothing can drift. */
+.wrap{
+  width:100%;
+  max-width:var(--wrap);
+  margin:0 auto;
+  padding:0 24px;
+  text-align:center;
+}
+
+section{padding:var(--s8) 0}
+section.tight{padding:var(--s7) 0}
+
+section.sandy{background:var(--sand)}
+section.band{background:var(--panel);color:#fff}   /* padding inherits from section, so the rhythm never breaks */
+section.band h2{color:#fff}
+section.band h2 em{color:var(--cream)}
+section.band .kicker{color:var(--muted)}
+section.band .sub{color:var(--muted)}
+/* .fine was --ink-3 on the dark band: 3.56:1, which fails at 13px and is
+   exactly the "I cannot read this" line. --muted measures 5.15:1 and passes. */
+section.band .fine{color:var(--muted)}
+section.band .fine a{color:var(--cream);text-decoration:underline;text-underline-offset:2px}
+
+/* ── PRICE COMPARISON (pricing page, dark band) ───────────────
+   Three prices side by side. ALTER is the standout in the middle:
+   sage accent, a best-value tag, and it sits a touch taller so the
+   eye lands on it. The other two are context, dimmed back. */
+.compare{
+  display:grid;
+  grid-template-columns:1fr 1.15fr 1fr;
+  gap:var(--s3);
+  align-items:center;
+  max-width:760px;
+  margin:var(--s5) auto 0;
+}
+.compare-item{
+  text-align:center;
+  padding:var(--s4) var(--s3);
+  border-radius:18px;
+  border:1px solid rgba(237,232,224,0.14);
+}
+.compare-item .compare-price{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:34px; font-weight:300; line-height:1;
+  color:var(--cream);
+}
+.compare-item .compare-label{
+  font-size:13px; line-height:1.5; color:var(--muted);
+  margin-top:10px;
+}
+/* the ALTER card: the hero of the three */
+.compare-alter{
+  background:var(--sage);
+  border-color:var(--sage);
+  padding:var(--s5) var(--s3);
+  position:relative;
+}
+.compare-alter .compare-price{
+  font-size:48px; font-weight:500; color:#fff;
+}
+.compare-alter .compare-label{
+  color:#F1EEE6; font-weight:500;
+}
+.compare-tag{
+  display:inline-block;
+  font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--sage-d); background:var(--cream);
+  padding:4px 12px; border-radius:100px;
+  margin-bottom:14px;
+}
+@media(max-width:640px){
+  .compare{grid-template-columns:1fr; gap:var(--s2); max-width:340px}
+  .compare-alter{order:-1}   /* on phone, show ALTER first */
+  .compare-item .compare-price{font-size:30px}
+  .compare-alter .compare-price{font-size:42px}
+}
+
+/* the heading block: kicker, rule, h, sub. always this, always centred. */
+.head{max-width:640px;margin:0 auto}
+.founder .wrap > p{
+  max-width:620px;
+  margin:0 auto var(--s3);
+  font-size:16px;
+  line-height:1.85;
+  color:var(--ink-2);
+  text-align:center;
+}
+.founder .head{margin-bottom:var(--s4)}
+.founder .cta{margin-top:var(--s4)}
+.head .sub,
+.head .lede{margin:var(--s3) auto 0;max-width:540px}
+
+/* whatever follows the heading block. ONE gap. nothing stacks on it. */
+.head + *{margin-top:var(--s5)}
+
+/* ── NAV ──────────────────────────────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:60;
+  background:rgba(245,242,236,.9);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{
+  display:flex;align-items:center;justify-content:space-between;
+  height:66px;text-align:left;
+}
+.brand{display:flex;align-items:center;gap:9px}
+.brand span{font-size:13px;letter-spacing:5px;font-weight:600}
+
+.links{display:flex;align-items:center;gap:var(--s3)}
+.links > a{
+  font-size:14px;color:var(--ink-2);
+  transition:color .15s;
+}
+.links > a:hover{color:var(--ink)}
+
+/* The Download button is a BUTTON, not a nav link. `.links > a` was
+   repainting its text grey because it out-specifies `.btn`. */
+.links > a.btn{color:#fff}
+.links > a.btn:hover{color:#fff}
+
+.burger{display:none;font-size:22px;padding:10px;min-width:44px}
+
+/* ── BUTTONS ──────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:52px;
+  padding:0 32px;
+  border-radius:100px;
+  background:var(--sage-d);
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  transition:transform .12s, opacity .15s;
+}
+.btn:hover{opacity:.9}
+.btn:active{transform:scale(.98)}
+
+.btn.ghost{
+  background:transparent;
+  color:var(--ink);
+  border:1px solid var(--line);
+}
+.btn.ghost:hover{background:var(--card);border-color:var(--sage)}
+
+.btn.light{background:var(--cream);color:var(--ink)}
+.btn.sm{min-height:42px;padding:0 20px;font-size:11px;letter-spacing:1.4px}
+
+.cta{display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+
+/* ── HERO ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   HERO  ·  two column, copy left, phone right (All Sorted layout, ALTER skin)
+   ═══════════════════════════════════════════════════════════════ */
+.hero{
+  background:var(--sand);
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+/* the dotted texture, in sage instead of taupe */
+.hero-bg{
+  position:absolute; inset:0;
+  background-image:radial-gradient(circle, rgba(138,145,121,.20) 1px, transparent 1px);
+  background-size:26px 26px;
+  pointer-events:none;
+}
+.hero-shell{
+  position:relative; z-index:1;
+  max-width:1140px; margin:0 auto;
+  display:grid; grid-template-columns:1.05fr .95fr; gap:44px;
+  align-items:center;
+  padding:120px 32px 88px;
+}
+.hero-copy{text-align:left; max-width:560px}
+.hero-copy .kicker{margin-bottom:20px}
+.hero-copy h1{
+  font-size:clamp(40px,5.4vw,62px);
+  line-height:1.02;
+  margin:0 0 22px;
+}
+.hero-copy h1.hero-bold{font-weight:600}
+.hero-copy h1.hero-bold em{font-weight:600}
+.hero-sub{
+  font-size:16px; font-weight:300; color:var(--ink-2);
+  line-height:1.75; max-width:460px; margin:0 0 30px;
+}
+.hero-arrows{
+  list-style:none; padding:0; margin:0 0 32px;
+  display:flex; flex-direction:column; gap:13px;
+}
+.hero-arrows li{
+  display:flex; align-items:center; gap:13px;
+  font-size:15px; color:var(--ink); line-height:1.4;
+}
+.hero-arrows .ar{
+  width:25px; height:25px; border-radius:13px;
+  background:var(--sage);
+  display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.hero-arrows .ar svg{width:13px; height:13px}
+.hero-actions{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.appstore-badge{
+  display:inline-flex; align-items:center; gap:11px;
+  background:var(--ink); color:#fff;
+  border-radius:13px; padding:12px 22px;
+  text-decoration:none; font-size:14px; font-weight:500;
+  transition:transform .2s, box-shadow .2s;
+  box-shadow:0 6px 18px rgba(43,45,38,.18);
+}
+.appstore-badge:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(43,45,38,.26)}
+.appstore-badge svg{width:20px; height:20px}
+.hero-secondary{
+  font-size:14px; color:var(--ink-2); font-weight:500;
+  text-decoration:none; border-bottom:1px solid var(--muted);
+  padding-bottom:2px;
+}
+.hero-secondary:hover{color:var(--ink); border-color:var(--ink)}
+.hero .fine{margin-top:2px}
+
+.hero-visual{display:flex; justify-content:center; align-items:center}
+.hero-phone{
+  width:min(272px,74vw);
+  background:var(--panel);
+  border-radius:44px; padding:10px;
+  box-shadow:0 34px 80px rgba(53,56,46,.30), 0 10px 26px rgba(53,56,46,.16);
+}
+.hero-phone-scr{
+  background:var(--page);
+  border-radius:34px; overflow:hidden;
+  aspect-ratio:9/19.5;
+  display:flex; align-items:center; justify-content:center;
+}
+
+@media(max-width:820px){
+  .hero-shell{
+    grid-template-columns:1fr; gap:36px;
+    padding:104px 26px 68px; text-align:center;
+  }
+  .hero-copy{max-width:none; text-align:center}
+  .hero-sub{margin-left:auto; margin-right:auto}
+  .hero-arrows{align-items:flex-start; max-width:340px; margin-left:auto; margin-right:auto}
+  .hero-actions{justify-content:center}
+}
+
+.phone{
+  width:250px;
+  margin:var(--s6) auto 0;
+  border:9px solid #16170f;
+  border-radius:38px;
+  overflow:hidden;
+  background:var(--page);
+  box-shadow:var(--shadow-lg);
+}
+.shot{
+  aspect-ratio:9/19.5;
+  background:var(--sand);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  font-size:12px;line-height:1.6;
+  color:var(--ink-3);
+}
+
+/* ── TRUST STRIP ──────────────────────────────────────────────── */
+.trust{
+  background:var(--card);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:var(--s3) 0;
+}
+.trust .wrap{
+  display:flex;justify-content:center;flex-wrap:wrap;
+  gap:var(--s3) var(--s6);
+}
+.trust span{font-size:13px;color:var(--ink-2)}
+.trust b{color:var(--ink);font-weight:600}
+
+/* ── THE STATEMENT ────────────────────────────────────────────── */
+.quote{
+  max-width:760px;margin:0 auto;
+  font-size:clamp(21px,2.8vw,30px);
+  font-weight:500;
+  line-height:1.5;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink);            /* dark by default, for light sections */
+}
+section.band .quote{color:#fff}  /* white only on a dark band */
+.quote em{font-style:normal;color:var(--sage)}
+.quote + .sub{margin:var(--s4) auto 0;max-width:500px;text-transform:none;letter-spacing:0}
+
+/* ── STEPS ────────────────────────────────────────────────────── */
+/* no borders between them. space does the separating. */
+.steps{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+  gap:var(--s5) var(--s4);
+  max-width:900px;
+  margin:0 auto;
+}
+.step .n{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:3px;
+  color:var(--sage);
+  margin-bottom:var(--s2);
+}
+.step h3{margin-bottom:12px}
+.step p{font-size:15px;line-height:1.75;color:var(--ink-2)}
+
+section.band .step p{color:var(--muted)}
+section.band .step h3{color:#fff}
+
+/* ── THE PROOF CARD ───────────────────────────────────────────── */
+.proof{
+  max-width:380px;
+  margin:0 auto;
+  padding:var(--s5) var(--s4);
+  border-radius:24px;
+  background:var(--panel);
+  color:#fff;
+  box-shadow:var(--shadow-lg);
+}
+.proof .lab{
+  font-size:10px;letter-spacing:2.8px;text-transform:uppercase;
+  color:var(--sage);font-weight:600;
+}
+.proof .msg{font-size:15px;color:var(--muted);margin-top:var(--s2);line-height:1.6}
+.proof .big{
+  font-size:54px;font-weight:300;color:var(--cream);
+  letter-spacing:-2px;line-height:1.1;margin-top:6px;
+}
+.proof .sets{
+  display:flex;justify-content:center;flex-wrap:wrap;
+  gap:8px;
+  margin-top:var(--s4);
+  padding-top:var(--s3);
+  border-top:1px solid var(--line-d);
+}
+.pill{
+  display:inline-block;
+  background:rgba(237,232,224,.12);
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:13px;
+  color:var(--cream);
+  white-space:nowrap;
+}
+
+/* ── SWIPE CAROUSEL (app screens + transformations) ───────────── */
+.swipe{
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding-bottom:6px;
+}
+.swipe::-webkit-scrollbar{display:none}
+
+.track{
+  display:flex;
+  gap:var(--s2);
+  width:max-content;
+  padding:0 max(24px, calc((100vw - var(--wrap)) / 2));
+}
+
+.slide{flex:0 0 auto;scroll-snap-align:center;text-align:center}
+
+/* app screens */
+.slide.app{width:230px}
+.slide.app .phone{width:230px;margin:0;border-width:7px;border-radius:30px}
+.slide.app b{display:block;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-top:var(--s3);font-weight:600}
+.slide.app span{display:block;font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+
+/* transformations */
+.slide.tf{
+  width:280px;
+  position:relative;
+  border-radius:20px;
+  overflow:hidden;
+  background:var(--sand);
+  box-shadow:var(--shadow);
+}
+.slide.tf img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center top}
+.slide.tf figcaption{
+  position:absolute;left:14px;bottom:14px;z-index:2;
+  background:rgba(43,45,38,.6);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  color:#fff;
+  font-size:10.5px;letter-spacing:2px;text-transform:uppercase;font-weight:600;
+  padding:7px 14px;border-radius:100px;
+}
+.slide.tf::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:32%;
+  background:linear-gradient(to top, rgba(43,45,38,.5), transparent);
+  pointer-events:none;
+}
+
+/* carousel controls */
+.swipe-nav{
+  display:flex;align-items:center;justify-content:center;
+  gap:var(--s3);
+  margin-top:var(--s4);
+}
+.swipe-nav button{
+  width:46px;height:46px;border-radius:50%;
+  border:1px solid var(--line);
+  background:var(--card);
+  font-size:20px;line-height:1;
+  transition:background .15s,border-color .15s;
+}
+.swipe-nav button:hover{background:var(--sand);border-color:var(--sage)}
+section.band .swipe-nav button{background:var(--panel-2);border-color:var(--line-d);color:#fff}
+
+.dots{display:flex;gap:7px}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--sage-l);
+  transition:width .2s,background .2s;
+}
+.dot.on{width:22px;border-radius:100px;background:var(--sage-d)}
+
+/* ── LISTS ────────────────────────────────────────────────────── */
+/* centred as a block, left-aligned inside, so lines stay readable */
+.ticks,.crosses{
+  display:inline-block;
+  text-align:left;
+  max-width:420px;
+}
+.ticks li,.crosses li{
+  position:relative;
+  padding:9px 0 9px 30px;
+  font-size:15.5px;
+  line-height:1.7;
+  color:var(--ink-2);
+}
+.ticks li::before{
+  content:"";
+  position:absolute;left:4px;top:17px;
+  width:12px;height:7px;
+  border-left:1.5px solid var(--sage);
+  border-bottom:1.5px solid var(--sage);
+  transform:rotate(-45deg);
+}
+/* The cross, drawn not typed. Same reason as the FAQ chevron: the escape
+   \00d7 can misparse and leave stray digits on the page. */
+.crosses li::before{
+  content:"";
+  position:absolute;left:5px;top:16px;
+  width:11px;height:1.5px;
+  background:var(--ink-3);
+  transform:rotate(45deg);
+}
+.crosses li::after{
+  content:"";
+  position:absolute;left:5px;top:16px;
+  width:11px;height:1.5px;
+  background:var(--ink-3);
+  transform:rotate(-45deg);
+}
+.crosses li a{color:var(--sage-d);text-decoration:underline;text-underline-offset:2px}
+
+
+/* ── TWO COLUMNS ──────────────────────────────────────────────── */
+
+/* ── THE NOTE (used for the retreat's judging statement) ──────── */
+.note{
+  max-width:520px;
+  margin:var(--s5) auto 0;
+  padding:var(--s3) var(--s4);
+  border-radius:16px;
+  background:rgba(237,232,224,.06);
+  border:1px solid var(--line-d);
+  font-size:15px;
+  line-height:1.8;
+  color:var(--muted);
+}
+.note strong{display:block;color:#fff;margin-bottom:8px;font-weight:600}
+
+/* ── THE OFFER BOX (glutes lander) ────────────────────────────── */
+.offer{
+  max-width:420px;
+  margin:0 auto;
+  padding:var(--s5) var(--s4);
+  border-radius:24px;
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+.offer .ticks{margin-bottom:var(--s4)}
+.offer .price{
+  padding-top:var(--s3);
+  border-top:1px solid var(--line);
+  margin-bottom:var(--s3);
+}
+.offer .price b{font-size:40px;font-weight:300;letter-spacing:-1.6px}
+.offer .price span{font-size:15px;color:var(--ink-2)}
+.offer .price em{display:block;font-style:normal;font-size:14px;color:var(--ink-2);margin-top:4px}
+.offer .btn{width:100%}
+
+
+/* ── ANNOUNCEMENT BAR ─────────────────────────────────────────── */
+.bar{
+  position:relative;
+  background:var(--panel);
+  color:#fff;
+  text-align:center;
+  padding:11px 44px;
+  font-size:13.5px;
+}
+.bar a{color:var(--cream);text-decoration:underline;text-underline-offset:2px}
+.bar .x{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:20px;color:var(--muted);padding:6px 10px;
+}
+
+
+/* ── FOOTER ───────────────────────────────────────────────────── */
+footer{
+  background:var(--panel);
+  color:var(--muted);
+  padding:var(--s6) 0 var(--s4);
+}
+footer .wrap{text-align:left}
+.fgrid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr 1fr;
+  gap:var(--s5) var(--s6);
+  align-items:start;
+}
+@media(min-width:841px){
+  .fgrid > div:first-child{padding-right:var(--s4)}
+}
+.flock{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.flock span{font-size:13px;letter-spacing:5px;color:#fff;font-weight:600}
+footer p{font-size:14.5px;line-height:1.7;max-width:340px}
+footer h4{
+  font-size:11px;letter-spacing:2.4px;text-transform:uppercase;
+  color:#fff;font-weight:600;margin-bottom:var(--s2);
+}
+footer li{margin-bottom:10px}
+footer li a{font-size:14.5px;transition:color .15s}
+footer li a:hover{color:#fff}
+
+.legal{
+  font-size:12px;
+  line-height:1.7;
+  color:var(--ink-3);
+  margin-top:var(--s3);
+  max-width:520px;
+}
+.fbot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:var(--s6);
+  padding-top:var(--s4);
+  border-top:1px solid var(--line-d);
+  font-size:13px;
+}
+.fbot a{
+  color:var(--muted);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  transition:color .15s;
+}
+.fbot a:hover{color:#fff}
+.fbot-links{display:flex;gap:10px;align-items:center}
+.fbot-c{color:var(--ink-3)}
+
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media(max-width:840px){
+  :root{--s5:36px; --s6:48px; --s7:60px; --s8:72px}
+
+  .wrap{padding:0 20px}
+
+  .burger{display:block}
+  .links{
+    display:none;
+    position:absolute;top:66px;left:0;right:0;
+    flex-direction:column;align-items:stretch;
+    gap:0;
+    background:var(--page);
+    border-bottom:1px solid var(--line);
+    padding:8px 20px 16px;
+  }
+  .links.open{display:flex}
+  .links > a{
+    display:flex;align-items:center;
+    min-height:52px;
+    border-bottom:1px solid var(--line);
+  }
+  .links .btn{margin-top:12px;width:100%}
+
+  .cta .btn{width:100%}
+  .phone{width:210px}
+  .track{padding:0 20px}
+  .slide.app,.slide.app .phone{width:min(200px,60vw)}
+  .slide.tf{width:min(250px,74vw)}
+  .swipe-nav button{display:none}
+
+  .trust .wrap{gap:var(--s2) var(--s4)}
+  .trust span{font-size:12.5px}
+
+  .proof{padding:var(--s4) var(--s3)}
+  .proof .big{font-size:44px}
+
+  footer{text-align:center}
+  footer .wrap{text-align:center}
+  .fgrid{
+    grid-template-columns:1fr 1fr;
+    gap:var(--s5) var(--s3);
+    text-align:center;
+  }
+  .fgrid > div:first-child{
+    grid-column:1 / -1;
+    text-align:center;
+    margin-bottom:var(--s3);
+  }
+  .flock{justify-content:center}
+  footer p,.legal{
+    margin-left:auto;margin-right:auto;
+    text-align:center;
+    max-width:340px;
+  }
+  footer .fgrid > div:first-child{text-align:center}
+  footer h4{margin-bottom:var(--s2)}
+  footer ul{display:flex;flex-direction:column;gap:10px}
+  .fbot{justify-content:center;text-align:center;flex-direction:column;gap:10px}
+  .fbot-links{justify-content:center;flex-wrap:wrap}
+}
+
+@media(max-width:380px){
+  .fgrid{grid-template-columns:1fr; gap:var(--s4)}
+  footer li a{font-size:15px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTS USED BY THE OTHER PAGES
+   Written once, in the same system. Not overrides, not patches.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── cards ────────────────────────────────────────────────────── */
+.card{
+  padding:var(--s4);
+  border-radius:20px;
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.card h3{margin-bottom:12px}
+.card p{font-size:15px;line-height:1.75;color:var(--ink-2);max-width:420px;margin:0 auto}
+section.band .card{background:var(--panel-2);border-color:var(--line-d);color:#fff}
+section.band .card h3{color:#fff}
+section.band .card p{color:var(--muted)}
+
+/* ── grids ────────────────────────────────────────────────────── */
+.grid{
+  display:grid;
+  gap:var(--s2);
+  max-width:1000px;
+  margin:0 auto;
+}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
+
+.center{text-align:center}
+
+/* ── pricing plans ────────────────────────────────────────────── */
+.plans{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+  gap:var(--s2);
+  max-width:680px;
+  margin:0 auto;
+}
+.plan{
+  position:relative;
+  padding:var(--s5) var(--s4);
+  border-radius:24px;
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.plan.best{border-color:var(--sage);border-width:2px}
+.plan .tag{
+  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  background:var(--sage-d);color:#fff;
+  font-size:10px;letter-spacing:1.6px;text-transform:uppercase;font-weight:700;
+  padding:6px 14px;border-radius:100px;white-space:nowrap;
+}
+.plan .name{
+  font-size:11px;letter-spacing:2.4px;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;
+}
+.plan .p{
+  font-size:46px;font-weight:300;letter-spacing:-2px;
+  margin-top:var(--s2);line-height:1.1;
+}
+.plan .per{font-size:14px;color:var(--ink-2);margin-top:4px}
+.plan .btn{width:100%;margin-top:var(--s4)}
+
+/* ── the glutes lander ────────────────────────────────────────── */
+.brand-l{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  margin-bottom:var(--s5);
+}
+.brand-l span{font-size:13px;letter-spacing:5px;font-weight:600}
+
+body.lander{padding-bottom:0}
+
+.sticky-cta{display:none}
+@media(max-width:840px){
+  .sticky-cta{
+    display:block;
+    position:fixed;left:0;right:0;bottom:0;z-index:80;
+    background:rgba(245,242,236,.94);
+    -webkit-backdrop-filter:blur(14px);
+    backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+  }
+  .sticky-cta .btn{width:100%}
+  body.lander{padding-bottom:92px}
+  body.lander footer{padding-bottom:var(--s7)}
+}
+
+/* the offer box price row */
+.price-row{
+  padding-top:var(--s3);
+  border-top:1px solid var(--line);
+  margin-bottom:var(--s3);
+}
+.price-row .p{font-size:40px;font-weight:300;letter-spacing:-1.6px;line-height:1.1}
+.price-row .p span{font-size:15px;color:var(--ink-2);letter-spacing:0}
+.price-row .pp{font-size:14px;color:var(--ink-2);margin-top:4px}
+
+/* ── legal page boxes ─────────────────────────────────────────── */
+.box{
+  padding:var(--s3);
+  border-radius:16px;
+  background:var(--sage-xl);
+  border:1px solid var(--sage-l);
+  margin-bottom:var(--s4);
+  text-align:left;
+}
+.box p{margin-bottom:0;color:var(--ink-2)}
+.updated{
+  font-size:13px;color:var(--ink-3);
+  margin-bottom:var(--s5);
+}
+
+/* ── legacy aliases, so older markup keeps working ────────────── */
+.cta-row{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:var(--s5)}
+.cta-row .btn{margin:0}
+.hero-c{padding:var(--s7) 0 var(--s8);text-align:center}
+.hero-c h1{max-width:760px;margin:0 auto}
+.hero-c .lede{max-width:520px;margin:var(--s3) auto 0}
+.hero-c .phone{margin-top:var(--s6)}
+.hero-c .fine{margin-top:var(--s2)}
+
+.results{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+  gap:var(--s2);
+  max-width:900px;
+  margin:0 auto;
+}
+.tf{
+  position:relative;border-radius:20px;overflow:hidden;
+  background:var(--sand);box-shadow:var(--shadow);
+}
+.tf img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center top}
+.tf figcaption{
+  position:absolute;left:14px;bottom:14px;z-index:2;
+  background:rgba(43,45,38,.6);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  color:#fff;font-size:10.5px;letter-spacing:2px;
+  text-transform:uppercase;font-weight:600;
+  padding:7px 14px;border-radius:100px;
+}
+.tf::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:32%;
+  background:linear-gradient(to top,rgba(43,45,38,.5),transparent);
+  pointer-events:none;
+}
+
+/* the flow list, for pages still using it. no borders, no markers. */
+.flow{max-width:620px;margin:0 auto;list-style:none}
+.flow li{padding:var(--s4) 0;text-align:center;list-style:none}
+.flow .fn{
+  display:block;font-size:11px;font-weight:600;letter-spacing:3px;
+  color:var(--sage);margin-bottom:var(--s2);
+}
+.flow h3{margin-bottom:12px}
+.flow p{max-width:420px;margin:0 auto;font-size:15px;line-height:1.75;color:var(--ink-2)}
+.flow.dark h3{color:#fff}
+.flow.dark p{color:var(--muted)}
+
+/* ═══════════════════════════════════════════════════════════════
+   FAQ
+   The accordions had NO styling at all, so browsers rendered their own
+   default triangle and cramped spacing. That is why the page looked wrong.
+   ═══════════════════════════════════════════════════════════════ */
+.faq{max-width:720px;margin:0 auto;text-align:left}
+
+.faq details{
+  border-bottom:1px solid var(--line);
+  padding:var(--s2) 0;
+}
+.faq details:first-of-type{border-top:1px solid var(--line)}
+
+.faq summary{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:var(--s3);
+  cursor:pointer;
+  list-style:none;
+  padding:var(--s2) 0;
+  font-size:16px;
+  font-weight:600;
+  line-height:1.5;
+  color:var(--ink);
+  transition:color .15s;
+}
+.faq summary:hover{color:var(--sage-d)}
+
+/* kill the browser's default triangle in every engine */
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::marker{content:""}
+
+/* Our own marker: a chevron DRAWN with borders, not typed as a character.
+   The previous version used a CSS escape (\2212 for a minus sign) and the
+   browser was printing a stray "2" from it. Escapes are fragile. Borders are
+   not: this renders identically in every browser, with no font, no glyph and
+   nothing to misparse. */
+.faq summary::after{
+  content:"";
+  flex:0 0 auto;
+  width:9px;
+  height:9px;
+  margin-top:6px;
+  border-right:1.5px solid var(--sage);
+  border-bottom:1.5px solid var(--sage);
+  transform:rotate(45deg);         /* points down: closed */
+  transition:transform .25s ease;
+}
+.faq details[open] summary::after{
+  transform:rotate(-135deg);       /* points up: open */
+  margin-top:10px;
+}
+
+.faq details p{
+  margin:0 0 var(--s2);
+  padding-right:40px;
+  font-size:15.5px;
+  line-height:1.85;
+  color:var(--ink-2);
+}
+.faq details a{color:var(--sage-d);text-decoration:underline;text-underline-offset:2px}
+
+@media(max-width:840px){
+  .faq summary{font-size:15px}
+  .faq details p{padding-right:0;font-size:15px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURES
+   One rhythm, repeated six times: text on one side, phone on the other,
+   alternating. The old page had 16 cards across seven sections in three
+   different grid widths, which is exactly why it read as chaotic.
+   ═══════════════════════════════════════════════════════════════ */
+section.feat{padding:var(--s7) 0}
+
+.feat-row{
+  display:grid;
+  grid-template-columns:1fr 300px;
+  gap:var(--s6);
+  align-items:center;
+  max-width:900px;
+  margin:0 auto;
+  text-align:left;
+}
+.feat-row.rev .feat-txt{order:2}
+.feat-row.rev .feat-img{order:1}
+
+.feat-n{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:3px;
+  color:var(--sage);
+  margin-bottom:var(--s2);
+}
+
+.feat-txt h2{
+  text-align:left;
+  margin:0 0 var(--s3);
+  font-size:clamp(21px,2.6vw,28px);
+}
+.feat-txt p{
+  font-size:16px;
+  line-height:1.85;
+  color:var(--ink-2);
+  margin-bottom:var(--s2);
+  max-width:none;
+}
+.feat-txt p em{font-style:italic;color:var(--ink)}
+.feat-txt .ticks{margin-top:var(--s2);max-width:none;display:block}
+
+/* the proof card sits inside a feature row, so it must not be centred */
+.feat-txt .proof{
+  margin:var(--s3) 0 0;
+  max-width:none;
+  text-align:center;
+}
+
+.feat-img{display:flex;justify-content:center}
+.feat-img .phone{width:100%;max-width:300px;margin:0}
+
+/* on the dark download band, the ghost button needs light borders */
+.btn.ghost.light-ghost{
+  color:#fff;
+  border-color:var(--line-d);
+}
+.btn.ghost.light-ghost:hover{
+  background:var(--panel-2);
+  border-color:var(--sage);
+}
+
+@media(max-width:840px){
+  .feat-row{
+    grid-template-columns:1fr;
+    gap:var(--s4);
+    text-align:center;
+  }
+  /* on mobile the phone always goes UNDER the text, regardless of side */
+  .feat-row.rev .feat-txt{order:1}
+  .feat-row.rev .feat-img{order:2}
+
+  .feat-txt h2{text-align:center}
+  .feat-txt p{max-width:480px;margin-left:auto;margin-right:auto}
+  .feat-txt .ticks{display:inline-block;text-align:left}
+  .feat-img .phone{max-width:230px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   The last of the inline overrides, moved where they belong.
+   Every inline style is a rule that cannot be found, cannot be reused, and
+   cannot be overridden. Sixteen of them is how the last stylesheet rotted.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* prose columns: readable line lengths */
+.wrap.prose{max-width:740px}
+.wrap.wide{max-width:900px}
+.wrap.legal-w{max-width:820px}
+
+/* the footer blurb, which was hand-styled on every single page */
+footer .blurb{
+  color:var(--muted);
+  font-size:14.5px;
+  line-height:1.7;
+  max-width:340px;
+}
+@media(max-width:840px){
+  footer .blurb{margin-left:auto;margin-right:auto}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE MANIFESTO
+   The "this is not a quick fix" section. Longer prose than anywhere else on
+   the site, so it needs a comfortable measure and generous line height. It
+   is meant to be READ, not scanned.
+   ═══════════════════════════════════════════════════════════════ */
+.manifesto{
+  max-width:600px;
+  margin:0 auto;
+  text-align:center;
+}
+.manifesto p{
+  font-size:16.5px;
+  line-height:1.9;
+  color:var(--muted);
+  margin-bottom:var(--s3);
+}
+.manifesto p strong{color:#fff;font-weight:600}
+.manifesto .cta{margin-top:var(--s5)}
+
+/* the line that has to land */
+.manifesto .pull{
+  font-size:clamp(19px,2.4vw,25px);
+  line-height:1.5;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:#fff;
+  font-weight:400;
+  margin:var(--s5) auto;
+  padding:var(--s4) 0;
+  border-top:1px solid var(--line-d);
+  border-bottom:1px solid var(--line-d);
+}
+
+@media(max-width:840px){
+  .manifesto p{font-size:15.5px;line-height:1.85}
+  .manifesto .pull{letter-spacing:1px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE QUALIFIER
+   Two panels of EQUAL weight. The old version was two bare columns with
+   mismatched content lengths (four short points against three long ones),
+   which read as ragged no matter how it was centred.
+
+   Panels fix that: they have their own edges, so unequal text inside cannot
+   make the section look broken.
+   ═══════════════════════════════════════════════════════════════ */
+.qual{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));
+  gap:var(--s2);
+  max-width:880px;
+  margin:0 auto;
+  align-items:stretch;
+}
+
+.qual-col{
+  padding:var(--s4);
+  border-radius:20px;
+  background:var(--card);
+  border:1px solid var(--line);
+  text-align:left;
+}
+.qual-col.yes{
+  background:var(--sage-xl);
+  border-color:var(--sage-l);
+}
+
+.qual-h{font-family:'Bricolage Grotesque',sans-serif;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:11px;
+  letter-spacing:2.2px;
+  text-transform:uppercase;
+  font-weight:500;
+  color:var(--ink);
+  padding-bottom:var(--s3);
+  margin-bottom:var(--s2);
+  border-bottom:1px solid var(--line);
+}
+.qual-col.yes .qual-h{font-family:'Bricolage Grotesque',sans-serif;border-bottom-color:var(--sage-l)}
+.qual-col.no .qual-h{font-family:'Bricolage Grotesque',sans-serif;color:var(--ink-2)}
+
+/* the tick and cross, drawn, never typed */
+.qual-mark{
+  position:relative;
+  flex:0 0 auto;
+  width:20px;height:20px;
+  border-radius:50%;
+}
+.qual-col.yes .qual-mark{background:var(--sage)}
+.qual-col.no  .qual-mark{background:var(--sand)}
+
+.qual-col.yes .qual-mark::before{
+  content:"";
+  position:absolute;left:6px;top:6px;
+  width:8px;height:4px;
+  border-left:1.5px solid #fff;
+  border-bottom:1.5px solid #fff;
+  transform:rotate(-45deg);
+}
+.qual-col.no .qual-mark::before,
+.qual-col.no .qual-mark::after{
+  content:"";
+  position:absolute;left:5px;top:9px;
+  width:10px;height:1.5px;
+  background:var(--ink-3);
+}
+.qual-col.no .qual-mark::before{transform:rotate(45deg)}
+.qual-col.no .qual-mark::after {transform:rotate(-45deg)}
+
+/* the lists inside a panel are already left aligned, so drop the
+   inline-block centring trick they use elsewhere */
+.qual-col .ticks,
+.qual-col .crosses{
+  display:block;
+  max-width:none;
+  text-align:left;
+}
+.qual-col .ticks li,
+.qual-col .crosses li{
+  font-size:15px;
+  line-height:1.7;
+  padding:10px 0 10px 28px;
+}
+.qual-col .ticks li::before{left:2px;top:18px}
+.qual-col .crosses li::before,
+.qual-col .crosses li::after{left:3px;top:17px}
+
+@media(max-width:840px){
+  .qual-col{padding:var(--s3)}
+  .qual-col .ticks li,
+  .qual-col .crosses li{font-size:14.5px}
+}
+
+/* sub-headings inside the legal pages */
+.sub-h{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:17px;
+  font-weight:500;
+  margin:var(--s3) 0 10px;
+  letter-spacing:0;
+  text-transform:none;
+  color:var(--ink);
+}
+
+/* the manifesto's pull quote wants more air than the prose around it */
+.manifesto .pull{
+  max-width:520px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROSE PAGES (about, and anywhere with long-form writing)
+
+   `.wrap` centres everything, which is right for headings and short blurbs
+   and completely wrong for six paragraphs of someone's life story. Centred
+   body copy has a ragged left edge, so the eye has to hunt for the start of
+   every line. It is the single fastest way to make writing look amateur.
+
+   Headings stay centred. The prose goes left, where it can be read.
+   ═══════════════════════════════════════════════════════════════ */
+.wrap.prose{max-width:680px}
+
+.wrap.prose > p,
+.wrap.prose > ul,
+.wrap.prose > ol,
+.wrap.prose > blockquote{
+  text-align:left;
+}
+.wrap.prose p{
+  font-size:17px;
+  line-height:1.9;
+  color:var(--ink-2);
+  margin-bottom:var(--s3);
+}
+.wrap.prose p strong{color:var(--ink);font-weight:600}
+.wrap.prose p em{font-style:italic}
+
+/* the pull quote inside a story */
+.wrap.prose .say{
+  margin:var(--s5) 0;
+  padding:var(--s2) 0 var(--s2) var(--s3);
+  border-left:2px solid var(--sage);
+  font-size:19px;
+  line-height:1.7;
+  color:var(--ink);
+  text-align:left;
+}
+
+/* a heading INSIDE a prose section still centres, with its rule */
+.wrap.prose h2{
+  margin:0 auto var(--s4);
+  text-align:center;
+}
+.wrap.prose .kicker,
+.wrap.prose .rule{margin-left:auto;margin-right:auto}
+
+section.sandy .wrap.prose p{color:var(--ink-2)}
+section.band  .wrap.prose p{color:var(--muted)}
+section.band  .wrap.prose p strong{color:#fff}
+
+@media(max-width:840px){
+  .wrap.prose p{font-size:16px;line-height:1.85}
+  .wrap.prose .say{font-size:17px;padding-left:var(--s2)}
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+   LEGAL PAGES  (privacy, terms, support)
+
+   These were inheriting the MARKETING typography: h1 and h2 are uppercase,
+   letterspaced and up to 50px because they were built for hero sections. So
+   "PRIVACY POLICY" was a giant shout, and all twenty clause headings were
+   shouting underneath it.
+
+   A legal document is not a landing page. It needs document typography:
+   sentence case, a clear numbered hierarchy, and text you can actually read
+   at length. It also needs to look TRUSTWORTHY, because Apple's reviewer and
+   any customer with a complaint will both open these.
+   ═══════════════════════════════════════════════════════════════ */
+
+.legal{
+  max-width:720px;
+  margin:0 auto;
+  text-align:left;
+}
+
+/* the title: a document title, not a hero */
+.legal h1{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:32px;
+  font-weight:500;
+  line-height:1.25;
+  letter-spacing:0;
+  text-transform:none;
+  color:var(--ink);
+  margin:0 0 8px;
+  text-align:left;
+}
+
+.legal .updated{
+  font-size:13.5px;
+  color:var(--ink-3);
+  margin:0 0 var(--s5);
+  padding-bottom:var(--s3);
+  border-bottom:1px solid var(--line);
+  text-align:left;
+}
+
+/* the summary box at the top. Plain English, before the legalese. */
+/* the plain-English summary. A sage tint, so it reads as a note from a human
+   before the legalese starts. */
+.legal .box{
+  padding:var(--s3) var(--s4);
+  border-radius:14px;
+  background:var(--sage-xl);
+  border:1px solid var(--sage-l);
+  margin-bottom:var(--s4);
+  text-align:left;
+}
+.legal .box p{margin:0;color:var(--ink-2);font-size:15.5px;line-height:1.8}
+.legal .box strong{color:var(--ink);font-weight:600}
+
+/* clause headings: numbered, sentence case, quiet */
+.legal h2{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:17px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  line-height:1.4;
+  color:var(--ink);
+  margin:var(--s5) 0 var(--s2);
+  padding-top:var(--s3);
+  border-top:1px solid var(--line);
+  text-align:left;
+}
+.legal h2:first-of-type{margin-top:0}
+
+.legal h3,
+.legal .sub-h{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:15px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  color:var(--ink);
+  margin:var(--s3) 0 8px;
+  text-align:left;
+}
+
+.legal p{
+  font-size:15.5px;
+  line-height:1.85;
+  color:var(--ink-2);
+  margin-bottom:var(--s2);
+  text-align:left;
+}
+
+.legal ul,
+.legal ol{
+  margin:0 0 var(--s2) 20px;
+  list-style:disc;
+  text-align:left;
+}
+.legal ol{list-style:decimal}
+.legal li{
+  margin-bottom:8px;
+  padding-left:4px;
+  color:var(--ink-2);
+  font-size:15.5px;
+  line-height:1.85;
+}
+
+.legal a{
+  color:var(--sage-d);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+
+.legal strong{color:var(--ink);font-weight:600}
+
+/* a table of contents, if a page has one */
+.legal .toc{
+  padding:var(--s3) 0 var(--s4);
+  margin-bottom:var(--s5);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:none;
+}
+/* A GRID, not CSS columns. Columns were overflowing the box and dragging the
+   page sideways. A grid physically cannot. */
+.legal .toc ul{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));
+  gap:2px var(--s4);
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+/* kill the marker at the list AND the item. `.legal ul` sets disc, and it was
+   leaking through. */
+.legal .toc li{
+  list-style:none;
+  margin:0;
+  padding:0;
+  font-size:14px;
+  line-height:1.6;
+}
+.legal .toc li::marker{content:""}
+.legal .toc a{
+  display:block;
+  padding:7px 0;
+  color:var(--ink-2);
+  text-decoration:none;
+  transition:color .15s;
+}
+.legal .toc a:hover{color:var(--sage-d);text-decoration:underline}
+
+@media(max-width:840px){
+  .legal h1{font-family:'Bricolage Grotesque',sans-serif;font-size:26px}
+  .legal h2{font-family:'Bricolage Grotesque',sans-serif;font-size:16px}
+  .legal p, .legal li{font-size:15px}
+  .legal .toc ul{columns:1}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   The retreat moved from a dark band to sand, so its note needs light
+   treatment. Dark green is now punctuation, used three times on the page,
+   not wallpaper used four.
+   ═══════════════════════════════════════════════════════════════ */
+section.sandy .note{
+  background:var(--card);
+  border-color:var(--line);
+  color:var(--ink-2);
+}
+section.sandy .note strong{color:var(--ink)}
+section.sandy .fine a{color:var(--sage-d)}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS WIN, EVERYWHERE
+   The Download button in the nav was rendering grey, because `.links > a`
+   sets a colour and out-specifies `.btn`. Any container that colours its
+   anchors can do the same thing to any button placed inside it later.
+   This closes that whole class of bug rather than the one instance of it.
+   ═══════════════════════════════════════════════════════════════ */
+.links a.btn,
+.bar a.btn,
+.fbot a.btn,
+.legal a.btn,
+.manifesto a.btn,
+.cta a.btn,
+.cta-row a.btn{
+  color:#fff;
+  text-decoration:none;
+}
+.links a.btn.ghost,
+.cta a.btn.ghost,
+.cta-row a.btn.ghost{color:var(--ink)}
+
+.links a.btn.light,
+.cta a.btn.light,
+.cta-row a.btn.light,
+.manifesto a.btn.light{color:var(--ink)}
+
+section.band .cta a.btn.ghost{color:#fff}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE SIX PRINCIPLES (about page)
+   Six cards in a two column grid, each with a long heading and a long
+   paragraph, read as a wall of text. A numbered list gives it a spine: she
+   can scan all six, then read the ones she cares about.
+   ═══════════════════════════════════════════════════════════════ */
+ol.rules{
+  list-style:none;
+  max-width:680px;
+  margin:0 auto;
+  padding:0;
+  text-align:left;
+  counter-reset:none;
+}
+ol.rules li{
+  display:flex;
+  gap:var(--s3);
+  padding:var(--s4) 0;
+  border-top:1px solid var(--line);
+  list-style:none;
+}
+ol.rules li:first-child{border-top:0;padding-top:0}
+
+ol.rules .rn{
+  flex:0 0 auto;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:2px;
+  color:var(--sage);
+  padding-top:4px;
+  min-width:26px;
+}
+ol.rules h3{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:15.5px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  line-height:1.45;
+  color:var(--ink);
+  margin:0 0 8px;
+}
+ol.rules p{
+  margin:0;
+  font-size:15.5px;
+  line-height:1.8;
+  color:var(--ink-2);
+  max-width:none;
+}
+
+@media(max-width:840px){
+  ol.rules li{gap:var(--s2);padding:var(--s3) 0}
+  ol.rules .rn{min-width:22px;font-size:10px}
+  ol.rules h3{font-family:'Bricolage Grotesque',sans-serif;font-size:15px}
+  ol.rules p{font-size:15px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE LONG GAME
+   The three vows. A manifesto nobody can scan is a manifesto nobody reads,
+   so the three concrete promises get pulled out of the prose and given their
+   own weight. These are the three things that make the whole thing true.
+   ═══════════════════════════════════════════════════════════════ */
+.manifesto .lead{
+  font-size:18px;
+  line-height:1.8;
+  color:#fff;
+}
+.manifesto .close{margin-top:0}
+
+ol.vows{
+  list-style:none;
+  display:grid;
+  grid-template-columns:1fr;   /* stacked. auto-fit left an empty cell that rendered as a black block */
+  gap:1px;
+  max-width:640px;
+  margin:var(--s5) auto;
+  padding:0;
+  background:var(--line-d);
+  border:1px solid var(--line-d);
+  border-radius:18px;
+  overflow:hidden;
+}
+ol.vows li{
+  list-style:none;
+  margin:0;
+  padding:var(--s4);
+  background:var(--panel);
+  text-align:left;
+}
+ol.vows .vn{
+  display:block;
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:2.4px;
+  color:var(--sage);
+  margin-bottom:var(--s2);
+}
+ol.vows h3{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:15.5px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  line-height:1.45;
+  color:#fff;
+  margin:0 0 10px;
+}
+ol.vows p{
+  margin:0;
+  font-size:14.5px;
+  line-height:1.75;
+  color:var(--muted);
+  max-width:none;
+}
+
+@media(max-width:840px){
+  .manifesto .lead{font-size:16.5px}
+  ol.vows{margin:var(--s5) auto;border-radius:14px}
+  ol.vows li{padding:var(--s3)}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   The classes that replaced 29 inline colour overrides.
+
+   Inline colours are how "but this can" ended up as cream text on a sand
+   background, measuring 1.04:1. Nobody could have caught that by eye: the
+   colour was correct for the background it was ORIGINALLY on, and it stayed
+   correct-looking in the source long after the background changed underneath
+   it. The stylesheet knows what a dark band is. The HTML should not have to.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* the little ALTER wordmark in a dark panel */
+.flock-w{
+  font-size:13px;
+  letter-spacing:5px;
+  font-weight:600;
+  color:#fff;
+}
+
+/* a big number inside a dark card */
+.big-num{
+  font-size:26px;
+  font-weight:300;
+  letter-spacing:.5px;
+  color:var(--cream);
+}
+
+/* the featured pricing plan */
+.plan.feat-plan{
+  background:var(--sage);
+  border-color:var(--sage);
+}
+.plan.feat-plan h3,
+.plan.feat-plan .plan-price,
+.plan.feat-plan li,
+.plan.feat-plan p{color:#fff}
+.plan-price{
+  font-weight:300;
+  font-size:32px;
+  color:#fff;
+}
+
+/* the helpline in the footer is a real link, not a string of digits to retype */
+footer .legal a{
+  color:var(--muted);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+footer .legal a:hover{color:#fff}
+footer .legal + .legal{margin-top:10px}
+
+/* the time on each step: the thing she actually wants to know */
+.step .t{
+  display:inline-block;
+  margin-top:var(--s2);
+  padding:5px 11px;
+  border-radius:100px;
+  background:var(--sage-xl);
+  border:1px solid var(--sage-l);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--ink-2);   /* --sage-d measured 3.74:1 on this chip and failed */
+}
+section.band .step .t{
+  background:var(--panel-2);
+  border-color:var(--line-d);
+  color:var(--sage);
+}
+.step p em{font-style:italic;color:var(--ink)}
+
+/* the email, given the weight it deserves */
+.mail{
+  margin-top:var(--s4);
+  text-align:left;
+}
+.mail a{
+  display:inline-block;
+  padding:12px 20px;
+  border-radius:100px;
+  background:var(--sage-xl);
+  border:1px solid var(--sage-l);
+  color:var(--sage-d);
+  font-size:15px;
+  font-weight:600;
+  text-decoration:none;
+  transition:background .15s, border-color .15s;
+}
+.mail a:hover{
+  background:var(--sage-l);
+  border-color:var(--sage);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL
+   A static list of judging criteria is a boring way to sell a holiday. She
+   clicks, and the answer is the reward.
+   ═══════════════════════════════════════════════════════════════ */
+.modal[hidden]{display:none}
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:var(--s3);
+}
+.modal-bg{
+  position:absolute;
+  inset:0;
+  background:rgba(28,30,24,.55);
+  backdrop-filter:blur(3px);
+  animation:fade .2s ease;
+}
+.modal-box{
+  position:relative;
+  width:100%;
+  max-width:520px;
+  max-height:88vh;
+  overflow-y:auto;
+  padding:var(--s5) var(--s4) var(--s4);
+  border-radius:22px;
+  background:var(--panel);
+  border:1px solid var(--line-d);
+  text-align:center;
+  animation:rise .28s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{
+  from{opacity:0;transform:translateY(16px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+
+.modal-box .kicker{color:var(--muted)}
+.modal-box .rule{background:var(--sage);margin-left:auto;margin-right:auto}
+.modal-box h3{
+  font-size:clamp(21px,3vw,27px);
+  font-weight:400;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  line-height:1.3;
+  color:#fff;
+  margin:0 0 var(--s4);
+}
+.modal-box h3 em{font-style:normal;color:var(--cream)}
+
+/* the close button, drawn not typed */
+.modal-x{
+  position:absolute;
+  top:14px;right:14px;
+  width:32px;height:32px;
+  border-radius:50%;
+  border:1px solid var(--line-d);
+  background:transparent;
+  cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.modal-x:hover{background:var(--panel-2);border-color:var(--sage)}
+.modal-x::before,
+.modal-x::after{
+  content:"";
+  position:absolute;
+  left:9px;top:15px;
+  width:13px;height:1.5px;
+  background:var(--muted);
+}
+.modal-x::before{transform:rotate(45deg)}
+.modal-x::after{transform:rotate(-45deg)}
+
+.modal-note{
+  margin:var(--s4) 0 0;
+  padding-top:var(--s3);
+  border-top:1px solid var(--line-d);
+  font-size:14.5px;
+  line-height:1.75;
+  color:var(--muted);
+}
+.modal-note strong{color:#fff;font-weight:600;display:block;margin-bottom:6px}
+
+/* the vows work inside the modal too, just tighter */
+.modal-box .vows{
+  margin:0;
+  grid-template-columns:1fr;
+  border-radius:14px;
+}
+.modal-box .vows li{padding:var(--s3)}
+.modal-box .vows h3{font-family:'Bricolage Grotesque',sans-serif;
+  font-size:15.5px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  margin:0 0 6px;
+}
+
+/* stop the page scrolling behind an open modal */
+body.locked{overflow:hidden}
+
+@media(max-width:840px){
+  .modal-box{padding:var(--s4) var(--s3) var(--s3);border-radius:18px}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RHYTHM
+   Every section is padded the same. Every gap between a heading and its
+   content is the same. The eye reads a system rather than a series of
+   decisions, which is the entire difference between "designed" and "made".
+   ═══════════════════════════════════════════════════════════════ */
+section > .wrap > * + *{margin-top:var(--s5)}
+.head + .steps,
+.head + .vows,
+.head + .grid,
+.head + .cta{margin-top:var(--s5)}
+.vows + .pull,
+.steps + .pull{margin-top:var(--s5)}
+.pull + .cta{margin-top:var(--s4)}
+.cta + .fine{margin-top:var(--s2)}
+
+/* cards and panels all breathe the same */
+.step,
+.vows li{padding:var(--s3)}
+.steps{gap:var(--s2)}
+.vows{gap:1px}
+
+/* the head block itself */
+.head .rule{margin-top:var(--s2);margin-bottom:var(--s2)}
+.head h2{margin:0}
+.head .sub{margin-top:var(--s3)}
+
+
+/* the vows on a LIGHT section: dark panels would read as black slabs */
+section:not(.band) ol.vows{background:var(--line);border-color:var(--line)}
+section:not(.band) ol.vows li{background:var(--card)}
+section:not(.band) ol.vows h3{font-family:'Bricolage Grotesque',sans-serif;color:var(--ink)}
+section:not(.band) ol.vows p{color:var(--ink-2)}
+section:not(.band) ol.vows .vn{color:var(--sage-d)}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE LEGAL CONTENTS LIST
+   Twenty entries, permanently open, was a wall you had to scroll past to reach
+   the clause you came for. It collapses now, the same way the FAQ does.
+   ═══════════════════════════════════════════════════════════════ */
+details.toc{
+  margin:var(--s4) 0;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  overflow:hidden;
+}
+details.toc > summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 18px;
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink);
+}
+details.toc > summary::-webkit-details-marker{display:none}
+/* the chevron, drawn from borders. no character escapes, ever. */
+details.toc > summary::after{
+  content:"";
+  width:7px;height:7px;
+  margin-left:auto;
+  border-right:1.5px solid var(--muted-d);
+  border-bottom:1.5px solid var(--muted-d);
+  transform:rotate(45deg);
+  transition:transform .18s ease;
+}
+details.toc[open] > summary::after{transform:rotate(-135deg)}
+details.toc > summary:hover{background:var(--sand)}
+details.toc .tn{
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--muted-d);
+}
+details.toc ul{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));
+  gap:0 var(--s4);
+  margin:0;
+  padding:4px 18px 16px;
+  list-style:none;
+  border-top:1px solid var(--line);
+}
+details.toc li{
+  list-style:none;
+  margin:0;
+  padding:0;
+  font-size:13.5px;
+}
+details.toc li::marker{content:""}
+details.toc a{
+  display:block;
+  padding:6px 0;
+  color:var(--ink-2);
+  text-decoration:none;
+}
+details.toc a:hover{color:var(--sage-d);text-decoration:underline}
+
+/* Kill the numbering at the list AND the item AND the marker. Setting it on the
+   <ol> alone is not enough: the browser still counts, and in some renderers the
+   marker leaks through. This is the same bug that put bullets on the legal
+   contents list. */
+ol.vows,
+ol.vows li{list-style:none !important}
+ol.vows li::marker{content:"" !important}
+
+/* ═══════════════════════════════════════════════════════════════
+   WHAT YOU GET
+   Cards, not a list. The numeral sits BEHIND the text as a ghost, so it gives
+   rhythm without shouting. Phone first: one column, then two from 760px.
+   No <ol>, so there is no marker to leak. That bug is designed out.
+   ═══════════════════════════════════════════════════════════════ */
+.gets{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:var(--s2);
+  margin-top:var(--s5);
+}
+.get{
+  position:relative;
+  overflow:hidden;
+  padding:var(--s4) var(--s3) var(--s3);
+  border-radius:16px;
+  background:var(--card);
+  border:1px solid var(--line);
+}
+/* the ghost numeral */
+.get .gn{
+  position:absolute;
+  top:-6px;
+  right:10px;
+  font-size:74px;
+  font-weight:700;
+  line-height:1;
+  letter-spacing:-2px;
+  color:var(--sage);
+  opacity:.11;
+  pointer-events:none;
+  user-select:none;
+}
+/* the sage rule that ties it to every other section */
+.get::before{
+  content:"";
+  position:absolute;
+  top:var(--s4);
+  left:0;
+  width:3px;
+  height:20px;
+  background:var(--sage);
+  border-radius:0 2px 2px 0;
+}
+.get h3{
+  position:relative;
+  margin:0 0 10px;
+  padding-right:56px;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:19px;
+  font-weight:500;
+  line-height:1.2;
+  letter-spacing:-.01em;
+  color:var(--ink);
+}
+.get p{
+  position:relative;
+  margin:0;
+  font-size:15px;
+  line-height:1.65;
+  color:var(--ink-2);
+}
+
+@media(min-width:760px){
+  .gets{grid-template-columns:1fr 1fr;gap:var(--s3)}
+  .get{padding:var(--s4)}
+  .get .gn{font-size:88px;right:14px}
+}
+
+/* ── FEATURES PAGE HERO ────────────────────────────────────────
+   Same refined type as the homepage hero, but single-column and centred,
+   since this page has no phone beside it. */
+.feat-hero{padding:0; position:relative; overflow:hidden}
+.feat-hero .wrap{
+  position:relative; z-index:1;
+  text-align:center;
+  padding:120px 32px 72px;
+  max-width:720px;
+}
+.feat-hero .kicker{margin-bottom:20px}
+.feat-hero h1{
+  font-size:clamp(38px,5vw,58px);
+  line-height:1.04;
+  margin:0 auto 22px;
+}
+.feat-hero .hero-sub{
+  margin:0 auto;
+  max-width:520px;
+  text-align:center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HERO  ·  one consistent opening for every inner page
+   (about, faq, pricing, support, legal). Same dotted sage texture,
+   same refined eyebrow, same Bricolage headline, same light sub as the
+   homepage — so every page opens the same way.
+   ═══════════════════════════════════════════════════════════════ */
+section.page-hero{
+  background:var(--sand);
+  position:relative;
+  overflow:hidden;
+  padding:0;
+}
+section.page-hero::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image:radial-gradient(circle, rgba(138,145,121,.20) 1px, transparent 1px);
+  background-size:26px 26px;
+  pointer-events:none;
+}
+section.page-hero .wrap{
+  position:relative; z-index:1;
+  text-align:center;
+  padding:118px 32px 70px;
+  max-width:720px;
+}
+section.page-hero .kicker{margin-bottom:20px}
+section.page-hero h1{
+  font-size:clamp(34px,4.6vw,52px);
+  line-height:1.06;
+  margin:0 auto 22px;
+  max-width:640px;
+}
+section.page-hero .lede{
+  font-size:16px;
+  font-weight:300;
+  color:var(--ink-2);
+  line-height:1.75;
+  max-width:520px;
+  margin:0 auto;
+}
+/* legal pages have a smaller, left-aligned title block, keep it tidy but on-system */
+section.page-hero.legal-hero .wrap{text-align:left; max-width:760px}
+section.page-hero.legal-hero h1{margin-left:0; font-size:clamp(30px,4vw,44px)}
+section.page-hero.legal-hero .lede{margin-left:0}
+
+/* ═══════════════════════════════════════════════════════════════
+   RETREAT LEAD-GEN POPUP
+   Auto-appears once, a few seconds in. Limited-spots hook to drive signups.
+   Same visual language as the site: sand, sage, Bricolage heading.
+   ═══════════════════════════════════════════════════════════════ */
+.promo[hidden]{display:none}
+.promo{
+  position:fixed; inset:0; z-index:200;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+.promo-bg{
+  position:absolute; inset:0;
+  background:rgba(43,45,38,.55);
+  backdrop-filter:blur(3px);
+  animation:promoFade .3s ease;
+}
+@keyframes promoFade{from{opacity:0}to{opacity:1}}
+@keyframes promoRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.promo-box{
+  position:relative; z-index:1;
+  width:100%; max-width:440px;
+  background:var(--sand);
+  border-radius:22px;
+  padding:38px 34px 30px;
+  box-shadow:0 40px 90px rgba(43,45,38,.4);
+  animation:promoRise .4s ease;
+  overflow:hidden;
+}
+/* dotted texture, faint, like the heroes */
+.promo-box::before{
+  content:""; position:absolute; inset:0;
+  background-image:radial-gradient(circle, rgba(138,145,121,.18) 1px, transparent 1px);
+  background-size:24px 24px; pointer-events:none;
+}
+.promo-box > *{position:relative; z-index:1}
+.promo-x{
+  position:absolute; top:16px; right:16px; z-index:2;
+  width:30px; height:30px; border-radius:50%;
+  background:var(--card); border:1px solid var(--line);
+}
+.promo-x::before,.promo-x::after{
+  content:""; position:absolute; top:50%; left:50%;
+  width:12px; height:1.5px; background:var(--ink-2);
+}
+.promo-x::before{transform:translate(-50%,-50%) rotate(45deg)}
+.promo-x::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.promo-flag{
+  display:inline-block;
+  font-size:10px; font-weight:600; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--sage-d);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:6px 14px; margin-bottom:16px;
+}
+.promo-box h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(26px,6vw,34px);
+  font-weight:400; line-height:1.06; letter-spacing:-.02em;
+  color:var(--ink); margin:0 0 14px;
+}
+.promo-box h3 em{font-style:normal; color:var(--sage)}
+.promo-lede{
+  font-size:14.5px; font-weight:300; line-height:1.7;
+  color:var(--ink-2); margin:0 0 20px;
+}
+.promo-list{
+  list-style:none; margin:0 0 18px; padding:0;
+  display:flex; flex-direction:column; gap:9px;
+}
+.promo-list li{
+  display:flex; align-items:center; gap:12px;
+  font-size:14.5px; color:var(--ink);
+}
+.promo-list .pk{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:11px; font-weight:600; color:var(--sage-d);
+  width:24px; height:24px; border-radius:12px;
+  background:var(--card); border:1px solid var(--line);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.promo-note{
+  font-size:12.5px; line-height:1.65; color:var(--ink-3);
+  margin:0 0 22px;
+}
+.promo-cta{
+  display:block; text-align:center;
+  background:var(--ink); color:#fff;
+  border-radius:13px; padding:15px;
+  font-size:15px; font-weight:500; text-decoration:none;
+  transition:transform .2s, box-shadow .2s;
+}
+.promo-cta:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(43,45,38,.28)}
+.promo-fine{
+  text-align:center; font-size:11.5px; color:var(--ink-3);
+  margin:12px 0 0;
+}
+
+/* ── EVERYTHING ELSE SPEC GRID ─────────────────────────────────
+   Concrete features with real numbers, in a clean card grid. */
+.spec-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  max-width:940px;
+  margin:0 auto;
+}
+.spec{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:26px 24px;
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.spec:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 28px rgba(43,45,38,.08);
+  border-color:var(--sage-xl);
+}
+/* big stat numbers: bold, oversized, the visual anchor of each card */
+.spec.stat .spec-n{
+  display:block;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:46px; font-weight:600; line-height:.9;
+  color:var(--sage);
+  margin-bottom:14px;
+  letter-spacing:-.03em;
+}
+/* checkmark features: a neat sage tick chip instead of a big number */
+.spec.check .spec-n{
+  display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:10px;
+  background:var(--sage); color:#fff;
+  font-size:17px; font-weight:700; line-height:1;
+  margin-bottom:14px;
+}
+.spec h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:16.5px; font-weight:500; color:var(--ink);
+  margin:0 0 6px; letter-spacing:-.01em;
+}
+.spec p{
+  font-size:13px; font-weight:300; line-height:1.6;
+  color:var(--ink-2); margin:0;
+}
+@media(max-width:760px){
+  .spec-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:460px){
+  .spec-grid{grid-template-columns:1fr}
+}
+
+/* ── HERO PHONE: app icon placeholder ──────────────────────────
+   Shown until a real Today-screen screenshot is dropped in as hero-app.png. */
+.hero-app-img{width:100%; height:100%; object-fit:cover; display:block}
+.hero-icon-wrap{
+  height:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; padding:40px 24px; text-align:center;
+  background:linear-gradient(160deg, var(--page), var(--cream));
+}
+.hero-icon{
+  width:104px; height:104px; border-radius:24px;
+  box-shadow:0 16px 40px rgba(53,56,46,.28);
+}
+.hero-icon-word{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:22px; font-weight:600; letter-spacing:.18em; color:var(--ink);
+}
+.hero-icon-sub{
+  font-size:10px; font-weight:600; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--sage-d); margin-top:-6px;
+}
+
+/* ── CHOOSE YOUR COACH ─────────────────────────────────────────
+   Two coach cards. Same visual language as the "what you get" cards. */
+.coach-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+  max-width:640px;
+  margin:0 auto;
+}
+.coach{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  overflow:hidden;
+  display:flex;
+  text-align:left;
+}
+.coach-edge{width:8px; flex-shrink:0}
+.coach-edge-sage{background:var(--sage)}
+.coach-edge-rose{background:#C9A6A0}
+.coach-body{padding:24px; flex:1}
+.coach-head{display:flex; align-items:center; gap:14px; margin-bottom:14px}
+.coach-badge{
+  width:58px; height:58px; border-radius:29px;
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:24px; font-weight:600; color:#fff;
+}
+.coach-badge-sage{background:var(--sage)}
+.coach-badge-rose{background:#C9A6A0}
+.coach h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:22px; font-weight:500; color:var(--ink);
+  margin:0 0 6px;
+}
+.coach-pill{
+  display:inline-block;
+  font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  padding:3px 10px; border-radius:100px;
+}
+.coach-pill-sage{background:var(--cream); color:var(--sage-d)}
+.coach-pill-rose{background:#F3E9E6; color:#8A5F58}
+.coach-bio{
+  font-size:14.5px; font-weight:300; line-height:1.6;
+  color:var(--ink-2); margin:0 0 14px;
+}
+.coach-match{
+  border-top:1px solid var(--line);
+  padding-top:12px; margin:0;
+  font-size:13px; color:var(--ink-3); line-height:1.55;
+}
+.coach-match-sage{color:var(--sage-d); font-weight:600}
+.coach-match-rose{color:#B08A82; font-weight:600}
+@media(max-width:560px){
+  .coach-body{padding:20px}
+}
+
+/* ── COACH BIOS (About page) ───────────────────────────────────
+   Full founder stories, each led by a coach badge. */
+.bio{
+  border-top:1px solid var(--line);
+  padding-top:28px;
+  margin-top:28px;
+}
+.bio:first-of-type{border-top:none; padding-top:0; margin-top:8px}
+.bio-badge{
+  width:56px; height:56px; border-radius:28px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:24px; font-weight:600; color:#fff;
+  margin-bottom:16px;
+}
+.bio h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:23px; font-weight:500; color:var(--ink);
+  margin:0 0 4px;
+}
+.bio-tag{
+  font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--sage-d); margin:0 0 16px;
+}
+
+/* ── COACH BIO CARDS (About page) ─────────────────────────────
+   The founder stories as proper cards: a coloured accent edge, a
+   header with the badge, name and specialty pill, then the story. */
+.coachbio{
+  display:flex;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:24px;
+}
+.coachbio-edge{width:8px; flex-shrink:0}
+.coachbio-edge-sage{background:var(--sage)}
+.coachbio-edge-rose{background:#C9A6A0}
+.coachbio-body{padding:30px 32px}
+.coachbio-head{display:flex; align-items:center; gap:16px; margin-bottom:20px}
+.coachbio-head .bio-badge{margin-bottom:0}
+.coachbio-head h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:23px; font-weight:500; color:var(--ink);
+  margin:0 0 6px;
+}
+.coachbio-pill{
+  display:inline-block;
+  font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  padding:4px 11px; border-radius:100px;
+}
+.coachbio-pill-sage{background:var(--cream); color:var(--sage-d)}
+.coachbio-pill-rose{background:#F3E9E6; color:#8A5F58}
+.coachbio-body p{
+  font-size:15.5px; line-height:1.8; color:var(--ink-2);
+  margin:0 0 14px;
+}
+.coachbio-body p:last-child{margin-bottom:0}
+.coachbio-note{
+  text-align:center; max-width:520px;
+  margin:28px auto 0;
+}
+@media(max-width:560px){
+  .coachbio-body{padding:24px 22px}
+  .coachbio-head{gap:13px}
+  .coachbio-head h3{font-size:20px}
+}
+
+/* ── LAUNCH EVENT ──────────────────────────────────────────────
+   Pilates in the Park registration. A single sand card with a form. */
+#launch{background:var(--sand); padding:var(--s6) 0}
+.launch-card{
+  max-width:640px; margin:0 auto;
+  background:var(--card);
+  border-radius:22px;
+  padding:44px 38px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.launch-card::before{
+  content:""; position:absolute; inset:0;
+  background-image:radial-gradient(circle, rgba(138,145,121,.18) 1px, transparent 1px);
+  background-size:24px 24px; pointer-events:none;
+}
+.launch-card > *{position:relative; z-index:1}
+.launch-flag{
+  display:inline-block;
+  font-size:10px; font-weight:600; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--sage-d); background:var(--card);
+  border:1px solid var(--line); border-radius:999px;
+  padding:6px 14px; margin-bottom:16px;
+}
+.launch-card h2{margin:0 0 10px}
+.launch-meta{
+  font-size:13px; font-weight:600; letter-spacing:.02em;
+  color:var(--ink); margin:0 0 14px;
+}
+.launch-lede{
+  font-size:15px; font-weight:300; line-height:1.7;
+  color:var(--ink-2); max-width:480px; margin:0 auto 26px;
+}
+.launch-form{max-width:460px; margin:0 auto}
+.lf-row{display:flex; gap:10px; margin-bottom:10px}
+.lf-row input, .lf-row select{
+  flex:1; min-width:0;
+  font-family:'Hanken Grotesk',sans-serif; font-size:15px;
+  color:var(--ink); background:var(--card);
+  border:1px solid var(--line); border-radius:12px;
+  padding:13px 15px;
+}
+.lf-row input::placeholder{color:var(--ink-3)}
+.lf-btn{
+  flex:0 0 auto;
+  background:var(--ink); color:#fff;
+  border:none; border-radius:12px;
+  padding:13px 22px; font-size:15px; font-weight:500;
+  cursor:pointer; transition:transform .2s, box-shadow .2s;
+}
+.lf-btn:hover{transform:translateY(-2px); box-shadow:0 8px 22px rgba(43,45,38,.25)}
+.launch-fine{font-size:12px; color:var(--ink-3); margin:14px 0 0}
+.hidden{position:absolute; left:-9999px}
+@media(max-width:520px){
+  .launch-card{padding:34px 22px}
+  .lf-row{flex-direction:column}
+}
+
+/* ── FORM INSIDE THE LAUNCH POPUP ──────────────────────────────*/
+.pop-form{display:flex; flex-direction:column; gap:10px; margin:4px 0 0}
+.pop-form input, .pop-form select{
+  font-family:'Hanken Grotesk',sans-serif; font-size:15px;
+  color:var(--ink); background:var(--card);
+  border:1px solid var(--line); border-radius:12px;
+  padding:13px 15px; width:100%;
+}
+.pop-form input::placeholder{color:var(--ink-3)}
+.pop-form .promo-cta{margin-top:4px; cursor:pointer; border:none; width:100%}
+
+/* the goal-match line under each coach */
+/* ── LAUNCH FORM: thank-you + error states ─────────────────────*/
+.launch-thanks{text-align:center; padding:8px 0 4px}
+.thanks-tick{
+  width:54px; height:54px; border-radius:27px;
+  background:var(--sage); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; margin:0 auto 16px;
+}
+.launch-thanks h4{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:22px; font-weight:500; color:var(--ink);
+  margin:0 0 10px;
+}
+.launch-thanks p{
+  font-size:14.5px; font-weight:300; line-height:1.6;
+  color:var(--ink-2); margin:0 0 20px;
+}
+.launch-err{
+  font-size:12.5px; color:#b4544b; margin:4px 0 0; text-align:center;
+}
+
+/* hidden must beat the flex/other display rules on these, or setting the
+   `hidden` attribute in JS does nothing (this is why the form and the
+   thank-you showed at the same time). */
+.pop-form[hidden]{display:none}
+.launch-thanks[hidden]{display:none}
+.promo-lede[hidden]{display:none}
+.promo-fine[hidden]{display:none}
+.launch-err[hidden]{display:none}
+
+/* ── ANIMATED HERO SPLASH (matches the app splash exactly) ──────
+   Sage background, cream ALTER chevron. Same colours and mark as the app.
+   The chevron draws itself in, then breathes gently. Calm, on brand. */
+.hero-splash{
+  background:var(--sage);
+  display:flex; align-items:center; justify-content:center;
+}
+.hero-splash-mark{
+  width:13%;           /* true to the app: the mark is small, ~12% of the screen */
+  height:auto;
+  overflow:visible;
+}
+.hero-splash-path{
+  stroke-dasharray:1;
+  stroke-dashoffset:1;
+  animation:
+    splashDraw 1.1s cubic-bezier(.65,0,.35,1) .3s forwards,
+    splashBreathe 4s ease-in-out 1.6s infinite;
+  transform-origin:center;
+}
+@keyframes splashDraw{
+  to{ stroke-dashoffset:0; }
+}
+@keyframes splashBreathe{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.82; transform:scale(.97); }
+}
+/* respect reduced-motion: show the mark, skip the movement */
+@media(prefers-reduced-motion:reduce){
+  .hero-splash-path{ animation:none; stroke-dashoffset:0; }
+}
