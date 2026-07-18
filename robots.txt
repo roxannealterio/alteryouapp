@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /README.md
+Disallow: /admin/
+Disallow: /admin
+
+Sitemap: https://alteryouapp.com/sitemap.xml
