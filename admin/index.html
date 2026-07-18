@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ALTER Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;10..48,500;10..48,600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sage:#8A9179; --sage-d:#5A6049; --cream:#EDE8E0; --bg:#F5F2EC;
+    --ink:#2B2D26; --ink2:#5A5F4E; --ink3:#8A8A80; --olive:#45493C;
+    --rose:#C9A6A0; --card:#FFFFFF; --line:#E4E0D6; --sand:#DDD8CC;
+    --ok:#4E7A51; --bad:#B0574F; --gold:#C79A3E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Hanken Grotesk',sans-serif; background:var(--bg); color:var(--ink);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Bricolage Grotesque',sans-serif; font-weight:500; letter-spacing:-.01em}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px}
+
+  /* login */
+  .login-shell{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px}
+  .login-card{background:var(--card); border:1px solid var(--line); border-radius:24px; padding:36px 30px; width:100%; max-width:400px}
+  .brandmark{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+  .brandmark svg{width:24px; height:24px}
+  .brandmark span{font-family:'Bricolage Grotesque'; font-weight:600; letter-spacing:5px; font-size:15px; color:var(--ink)}
+  .login-card h1{font-size:22px; margin:14px 0 6px}
+  .login-card p{color:var(--ink2); font-size:14px; margin-bottom:22px}
+
+  label{display:block; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink3); margin-bottom:6px; margin-top:16px}
+  input, textarea, select{
+    width:100%; font-family:inherit; font-size:15px; color:var(--ink);
+    background:var(--bg); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; outline:none; transition:border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--sage)}
+  textarea{min-height:80px; resize:vertical}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-family:inherit; font-size:15px; font-weight:600; cursor:pointer;
+    background:var(--olive); color:#fff; border:none; border-radius:100px;
+    padding:13px 22px; transition:opacity .15s, transform .05s; width:100%;
+  }
+  .btn:hover{opacity:.92} .btn:active{transform:scale(.99)}
+  .btn.ghost{background:transparent; color:var(--ink2); border:1px solid var(--line)}
+  .btn.small{width:auto; padding:8px 16px; font-size:13px}
+  .btn.danger{background:var(--bad)}
+  .btn.gold{background:var(--gold)}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  .err{color:var(--bad); font-size:13px; margin-top:12px; min-height:18px}
+  .hidden{display:none !important}
+
+  /* app shell */
+  header.top{
+    background:var(--olive); color:#fff; padding:14px 0;
+    position:sticky; top:0; z-index:20;
+  }
+  header.top .wrap{display:flex; align-items:center; justify-content:space-between}
+  header.top .brandmark span{color:#fff}
+  header.top .who{font-size:13px; color:var(--cream); display:flex; align-items:center; gap:14px}
+  .logout{color:var(--cream); cursor:pointer; text-decoration:underline; font-size:13px}
+
+  .tabs{display:flex; gap:6px; padding:16px 0 0; flex-wrap:wrap}
+  .tab{
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    background:transparent; border:1px solid var(--line); color:var(--ink2);
+    border-radius:100px; padding:9px 18px;
+  }
+  .tab.on{background:var(--olive); color:#fff; border-color:var(--olive)}
+
+  section.page{padding:22px 0 60px}
+  .row-between{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px; flex-wrap:wrap}
+  .row-between h2{font-size:20px}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:14px}
+  .card h3{font-size:16px; margin-bottom:4px}
+  .meta{font-size:13px; color:var(--ink3)}
+  .card-actions{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap}
+
+  .pill{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border-radius:100px; background:var(--cream); color:var(--sage-d)}
+  .pill.live{background:#E4EFE0; color:var(--ok)}
+  .pill.ended{background:var(--sand); color:var(--ink2)}
+  .pill.win{background:#F5EAD0; color:var(--gold)}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--ink3)}
+  .empty svg{width:40px; height:40px; margin-bottom:12px; opacity:.5}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+
+  /* modal */
+  .modal-bg{position:fixed; inset:0; background:rgba(43,45,38,.55); display:flex; align-items:flex-end; justify-content:center; z-index:40; padding:0}
+  @media(min-width:560px){.modal-bg{align-items:center; padding:20px}}
+  .modal{background:var(--bg); border-radius:24px 24px 0 0; width:100%; max-width:520px; max-height:92vh; overflow-y:auto; padding:26px 22px 34px}
+  @media(min-width:560px){.modal{border-radius:24px}}
+  .modal h2{font-size:20px; margin-bottom:4px}
+  .modal .sub{color:var(--ink2); font-size:14px; margin-bottom:18px}
+
+  .entry{display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line)}
+  .entry:last-child{border-bottom:none}
+  .entry .av{width:40px; height:40px; border-radius:20px; background:var(--sand); display:flex; align-items:center; justify-content:center; font-weight:600; color:var(--olive); flex-shrink:0}
+  .entry .info{flex:1; min-width:0}
+  .entry .info .nm{font-weight:600; font-size:15px}
+  .entry .info .dt{font-size:12.5px; color:var(--ink3)}
+  .entry img.result{width:52px; height:52px; border-radius:10px; object-fit:cover; background:var(--sand)}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:12px 20px; border-radius:100px; font-size:14px; z-index:60; opacity:0; transition:opacity .2s; pointer-events:none}
+  .toast.show{opacity:1}
+  .spin{display:inline-block; width:18px; height:18px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .loading{text-align:center; padding:40px; color:var(--ink3)}
+
+  /* dashboard + photos */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px}
+  .stat .n{font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:30px; line-height:1; letter-spacing:-.02em; color:var(--ink)}
+  .stat .l{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); margin-top:9px}
+  .stat .s{font-size:12px; color:var(--sage-d); margin-top:4px}
+  .note{background:var(--cream); border:1px solid var(--line); border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.55; color:var(--ink2); margin-bottom:16px}
+  .photo-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+  .photo{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--card)}
+  .photo img{width:100%; aspect-ratio:3/4; object-fit:cover; display:block; background:var(--sand)}
+  .photo .cap{padding:8px 10px; font-size:12px; color:var(--ink2)}
+  .photo .cap b{color:var(--ink); font-weight:600}
+  select.filter{max-width:300px}
+  table.tbl{width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+  table.tbl th{font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink3); text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); background:var(--bg)}
+  table.tbl td{font-size:13px; color:var(--ink2); padding:11px 12px; border-bottom:1px solid var(--line)}
+  table.tbl tr:last-child td{border-bottom:0}
+  table.tbl td b{color:var(--ink); font-weight:600}
+  .tbl-wrap{overflow-x:auto}
+  .searchbar{width:100%; max-width:340px}
+  .drop{border:2px dashed var(--sand); border-radius:16px; padding:26px; text-align:center; color:var(--ink3); font-size:14px; background:var(--card); cursor:pointer; transition:.15s}
+  .drop:hover,.drop.over{border-color:var(--sage); color:var(--sage-d); background:var(--cream)}
+  .bar{height:6px; background:var(--sand); border-radius:100px; overflow:hidden; margin-top:10px}
+  .bar i{display:block; height:100%; background:var(--sage); width:0; transition:width .2s}
+  .thumb{width:54px; height:54px; border-radius:10px; object-fit:cover; background:var(--sand); flex:none}
+  .rrow{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line)}
+  .rrow:last-child{border-bottom:0}
+  .btn.danger{background:#B4544C; color:#fff; border:0}
+  .btn.danger:hover{background:#9C463F}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login" class="login-shell">
+  <div class="login-card">
+    <div class="brandmark">
+      <svg viewBox="0 0 1024 1024" aria-hidden="true"><path d="M232 758 L512 306 L792 758" fill="none" stroke="#8A9179" stroke-width="96" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <span>ALTER</span>
+    </div>
+    <h1>Admin sign in</h1>
+    <p>Manage your events, challenges and winners.</p>
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="email" value="info@alteryouapp.com" placeholder="info@alteryouapp.com">
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Your password">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" id="loginBtn" style="margin-top:20px">Sign in</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="wrap">
+      <div class="brandmark">
+        <svg viewBox="0 0 1024 1024" aria-hidden="true"><path d="M232 758 L512 306 L792 758" fill="none" stroke="#EDE8E0" stroke-width="96" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        <span>ALTER</span>
+      </div>
+      <div class="who">
+        <span id="whoEmail"></span>
+        <span class="logout" id="logout">Sign out</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab on" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="members">Members</button>
+      <button class="tab" data-tab="photos">Progress Photos</button>
+      <button class="tab" data-tab="announce">Announcements</button>
+      <button class="tab" data-tab="videos">Videos</button>
+      <button class="tab" data-tab="recipes">Recipe Photos</button>
+      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="challenges">Challenges</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <section class="page wrap" id="page-dashboard">
+    <div class="row-between"><h2>Dashboard</h2><button class="btn ghost small" id="refreshDash">Refresh</button></div>
+    <div id="statGrid" class="stat-grid"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+    <div class="note" id="subNote"></div>
+  </section>
+
+  <!-- EVENTS PAGE -->
+  <section class="page wrap hidden" id="page-events">
+    <div class="row-between">
+      <h2>Events</h2>
+      <button class="btn small" id="newEvent">Add event</button>
+    </div>
+    <div id="eventsList"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+
+  <!-- CHALLENGES PAGE -->
+  <section class="page wrap hidden" id="page-challenges">
+    <div class="row-between">
+      <h2>Challenges</h2>
+      <button class="btn small" id="newChallenge">Add challenge</button>
+    </div>
+    <div id="challengesList"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+
+  <!-- MEMBERS PAGE -->
+  <section class="page wrap hidden" id="page-members">
+    <div class="row-between">
+      <h2>Members</h2>
+      <input class="searchbar" id="memberSearch" placeholder="Search name, email or goal" style="margin:0">
+    </div>
+    <div id="membersBox"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+
+  <!-- ANNOUNCEMENTS PAGE -->
+  <section class="page wrap hidden" id="page-announce">
+    <div class="row-between">
+      <h2>Announcements</h2>
+      <button class="btn small" id="newAnnounce">New announcement</button>
+    </div>
+    <div class="note">Announcements appear in the app and members get a notification next time they open it. Good for "Bikini Build starts Monday" or a change to the Sunday walk.</div>
+    <div id="announceList"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+
+  <!-- VIDEOS PAGE -->
+  <section class="page wrap hidden" id="page-videos">
+    <div class="row-between"><h2>Workout Videos</h2></div>
+    <div class="note">Upload a video file and it goes straight into the app's video library. Give it the exact exercise name to make it show as that exercise's demo.</div>
+    <div class="card">
+      <label>Title</label><input id="v_title" placeholder="Barbell Hip Thrust">
+      <label>Collection (optional)</label><input id="v_collection" placeholder="Glutes">
+      <label>Exercise name (optional, must match the exercise exactly)</label><input id="v_exercise" placeholder="Barbell Hip Thrust">
+      <label>Video file</label>
+      <div class="drop" id="v_drop">Click or drop a video here (mp4, mov)</div>
+      <input type="file" id="v_file" accept="video/*" style="display:none">
+      <div class="bar" id="v_bar"><i></i></div>
+      <div style="margin-top:16px"><button class="btn" id="v_upload">Upload video</button></div>
+    </div>
+    <div id="videoList"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+
+  <!-- RECIPE PHOTOS PAGE -->
+  <section class="page wrap hidden" id="page-recipes">
+    <div class="row-between">
+      <h2>Recipe Photos</h2>
+      <input class="searchbar" id="recipeSearch" placeholder="Search recipes" style="margin:0">
+    </div>
+    <div class="note">Click a photo to upload or replace it. It updates in the app straight away.</div>
+    <div class="card" id="recipeList"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+    <input type="file" id="r_file" accept="image/*" style="display:none">
+  </section>
+
+  <!-- PROGRESS PHOTOS PAGE -->
+  <section class="page wrap hidden" id="page-photos">
+    <div class="row-between">
+      <h2>Progress Photos</h2>
+      <select class="filter" id="photoChallenge"><option value="all">All photos</option></select>
+    </div>
+    <div class="note">These are private client photos. They load through secure, expiring links and are only visible to you here. Filter by a challenge to see just that round's submissions.</div>
+    <div id="photoGrid" class="photo-grid"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// ── CONNECTION ─────────────────────────────────────────────
+// These are safe to sit in the page: the anon key only grants what your
+// row-level-security policies allow, and admin writes are gated on is_admin.
+const SUPABASE_URL = 'https://ghubvckcfcclzhbaafjh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdodWJ2Y2tjZmNjbHpoYmFhZmpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5OTU3NTEsImV4cCI6MjA5OTU3MTc1MX0.O3P4jfXbBSBKpiKX8De8DiN36aLmZpjiZof9TORto68';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── helpers ────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s == null ? '' : String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function prettyDate(d){
+  if(!d) return '';
+  try { return new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'long',year:'numeric'}); }
+  catch(e){ return d; }
+}
+const todayStr = () => new Date().toISOString().slice(0,10);
+
+// ── AUTH ───────────────────────────────────────────────────
+$('loginBtn').addEventListener('click', signIn);
+$('password').addEventListener('keydown', e => { if(e.key === 'Enter') signIn(); });
+
+async function signIn(){
+  const email = $('email').value.trim();
+  const password = $('password').value;
+  const btn = $('loginBtn'); const err = $('loginErr');
+  err.textContent = '';
+  if(!email || !password){ err.textContent = 'Enter your email and password.'; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    // check admin flag
+    const { data: prof } = await sb.from('profiles_alter').select('is_admin').eq('id', data.user.id).maybeSingle();
+    if(!prof || !prof.is_admin){
+      await sb.auth.signOut();
+      err.textContent = 'This account is not an admin.';
+      btn.disabled = false; btn.textContent = 'Sign in';
+      return;
+    }
+    enterApp(data.user);
+  } catch(e){
+    err.textContent = e.message || 'Could not sign in.';
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+}
+
+$('logout').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.reload();
+});
+
+async function enterApp(user){
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('whoEmail').textContent = user.email;
+  loadDashboard();
+  loadEvents();
+  loadChallenges();
+}
+$('refreshDash')?.addEventListener('click', loadDashboard);
+
+// restore an existing session on load
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if(data.session){
+    const { data: prof } = await sb.from('profiles_alter').select('is_admin').eq('id', data.session.user.id).maybeSingle();
+    if(prof && prof.is_admin) enterApp(data.session.user);
+  }
+})();
+
+// ── TABS ───────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    const tab = t.dataset.tab;
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    $('page-' + tab).classList.remove('hidden');
+    if(tab === 'dashboard') loadDashboard();
+    if(tab === 'photos') loadPhotos();
+    if(tab === 'members') loadMembers();
+    if(tab === 'announce') loadAnnouncements();
+    if(tab === 'videos') loadVideos();
+    if(tab === 'recipes') loadRecipes();
+  });
+});
+
+// ── DASHBOARD ──────────────────────────────────────────────
+function statCard(n, l, s){
+  return `<div class="stat"><div class="n">${n}</div><div class="l">${esc(l)}</div>${s ? `<div class="s">${esc(s)}</div>` : ''}</div>`;
+}
+async function countRows(table, mutate){
+  let q = sb.from(table).select('id', { count: 'exact', head: true });
+  if(mutate) q = mutate(q);
+  const { count, error } = await q;
+  if(error) throw error;
+  return count ?? 0;
+}
+async function loadDashboard(){
+  const grid = $('statGrid');
+  grid.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  try {
+    const members = await countRows('profiles_alter');
+    const iso = (d) => new Date(Date.now() - d*864e5).toISOString();
+    let newWeek = '—', newMonth = '—';
+    try { newWeek  = '+' + await countRows('profiles_alter', q => q.gte('created_at', iso(7))); } catch(e){}
+    try { newMonth = '+' + await countRows('profiles_alter', q => q.gte('created_at', iso(30))); } catch(e){}
+
+    const today = new Date().toISOString().slice(0,10);
+    const { data: live } = await sb.from('challenges').select('id,title').lte('starts_on', today).gte('ends_on', today).limit(1);
+    let participants = 0, liveTitle = 'No live challenge';
+    if(live && live[0]){
+      liveTitle = live[0].title;
+      participants = await countRows('challenge_entries', q => q.eq('challenge_id', live[0].id));
+    }
+    let photos = '—';
+    try { photos = await countRows('progress_photos'); } catch(e){}
+    // engagement: workouts completed in the last 7 days, and how many members did them
+    let active = '—', sessions = '—';
+    try {
+      const since = new Date(Date.now() - 7*864e5).toISOString().slice(0,10);
+      const { data: recent } = await sb.from('workouts').select('user_id').eq('completed', true).gte('date', since).limit(5000);
+      sessions = (recent || []).length;
+      active = new Set((recent || []).map(r => r.user_id)).size;
+    } catch(e){}
+
+    grid.innerHTML =
+      statCard(members, 'Members', 'total sign-ups') +
+      statCard(newWeek, 'New this week') +
+      statCard(newMonth, 'New this month') +
+      statCard(participants, 'In the challenge', liveTitle) +
+      statCard(photos, 'Progress photos', 'submitted') +
+      statCard(active, 'Active this week', 'trained in last 7 days') +
+      statCard(sessions, 'Sessions done', 'last 7 days');
+
+    $('subNote').innerHTML = '<b>About "Members":</b> that is everyone who has created an account. Whether they are <i>paying</i> is tracked in RevenueCat (App Store billing), not this database, so paying-subscriber count is not shown here yet. Ask me to wire a RevenueCat webhook and it can appear on this dashboard live.';
+  } catch(e){
+    grid.innerHTML = `<div class="note">Could not load stats: ${esc(e.message || String(e))}.<br>If it mentions permission, run <b>ADMIN_ACCESS.sql</b> in Supabase once, then refresh.</div>`;
+  }
+}
+
+// ── MEMBERS ────────────────────────────────────────────────
+let allMembers = [];
+function renderMembers(list){
+  const box = $('membersBox');
+  if(!list.length){ box.innerHTML = '<div class="note">No members match that search.</div>'; return; }
+  box.innerHTML = `<div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Name</th><th>Email</th><th>Goal</th><th>Coach</th><th>Days</th><th>Joined</th><th></th></tr></thead>
+    <tbody>${list.map(m => `<tr>
+      <td><b>${esc(m.name || 'Member')}</b></td>
+      <td>${esc(m.email || '')}</td>
+      <td>${esc(m.goal || '')}</td>
+      <td>${esc(m.coach || '')}</td>
+      <td>${esc(m.days_per_week || '')}</td>
+      <td>${m.created_at ? esc(String(m.created_at).slice(0,10)) : ''}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn ghost small" data-view-member="${m.id}">View</button></td>
+    </tr>`).join('')}</tbody></table></div>
+    <div class="meta" style="margin-top:10px">${list.length} member${list.length===1?'':'s'}</div>`;
+  document.querySelectorAll('[data-view-member]').forEach(b =>
+    b.addEventListener('click', () => viewMember(b.dataset.viewMember)));
+}
+
+// ── MEMBER DETAIL + DELETE ─────────────────────────────────
+async function viewMember(id){
+  const m = allMembers.find(x => x.id === id);
+  if(!m) return;
+  showModal(`<h2>${esc(m.name || 'Member')}</h2>
+    <div class="sub">${esc(m.email || '')}</div>
+    <div id="mDetail"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn ghost" id="m_close">Close</button>
+      <button class="btn danger" id="m_del" style="margin-left:auto">Delete member</button>
+    </div>`);
+  $('m_close').addEventListener('click', closeModal);
+
+  // load a quick snapshot of their activity
+  let sessions = '—', photos = '—', last = '—';
+  try {
+    const { count } = await sb.from('workouts').select('id',{count:'exact',head:true}).eq('user_id', id).eq('completed', true);
+    sessions = count ?? 0;
+  } catch(e){}
+  try {
+    const { count } = await sb.from('progress_photos').select('id',{count:'exact',head:true}).eq('user_id', id);
+    photos = count ?? 0;
+  } catch(e){}
+  try {
+    const { data } = await sb.from('workouts').select('date').eq('user_id', id).eq('completed', true).order('date',{ascending:false}).limit(1);
+    if(data && data[0]) last = data[0].date;
+  } catch(e){}
+
+  $('mDetail').innerHTML = `<div class="stat-grid" style="margin-top:16px">
+      ${statCard(sessions,'Sessions done')}
+      ${statCard(photos,'Photos')}
+      ${statCard(last,'Last trained')}
+    </div>
+    <div class="tbl-wrap"><table class="tbl"><tbody>
+      <tr><td>Goal</td><td><b>${esc(m.goal || '')}</b></td></tr>
+      <tr><td>Coach</td><td><b>${esc(m.coach || '')}</b></td></tr>
+      <tr><td>Days per week</td><td><b>${esc(m.days_per_week || '')}</b></td></tr>
+      <tr><td>Joined</td><td><b>${m.created_at ? esc(String(m.created_at).slice(0,10)) : ''}</b></td></tr>
+    </tbody></table></div>`;
+
+  $('m_del').addEventListener('click', async () => {
+    const name = m.name || m.email || 'this member';
+    if(!confirm(`Permanently delete ${name}?\n\nThis removes their account, all logged data and progress photos. It cannot be undone.`)) return;
+    if(prompt('Type DELETE to confirm') !== 'DELETE') return toast('Cancelled');
+    const { error } = await sb.rpc('admin_delete_member', { target: id });
+    if(error) return toast(error.message);
+    closeModal(); toast('Member deleted'); loadMembers(); loadDashboard();
+  });
+}
+async function loadMembers(){
+  const box = $('membersBox');
+  box.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  try {
+    const { data, error } = await sb.from('profiles_alter')
+      .select('id,name,email,goal,coach,days_per_week,created_at')
+      .order('created_at', { ascending: false }).limit(1000);
+    if(error) throw error;
+    allMembers = data || [];
+    renderMembers(allMembers);
+  } catch(e){
+    box.innerHTML = `<div class="note">Could not load members: ${esc(e.message || String(e))}.<br>If it mentions permission, run <b>ADMIN_ACCESS.sql</b>, then refresh.</div>`;
+  }
+}
+$('memberSearch')?.addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  renderMembers(!q ? allMembers : allMembers.filter(m =>
+    [m.name, m.email, m.goal, m.coach].some(v => String(v||'').toLowerCase().includes(q))));
+});
+
+// ── ANNOUNCEMENTS ──────────────────────────────────────────
+async function loadAnnouncements(){
+  const box = $('announceList');
+  box.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  try {
+    const { data, error } = await sb.from('announcements').select('*').order('created_at', { ascending: false });
+    if(error) throw error;
+    if(!data || !data.length){ box.innerHTML = '<div class="note">No announcements yet. Tap “New announcement” to send your first.</div>'; return; }
+    box.innerHTML = data.map(a => `<div class="card">
+      <div class="row-between" style="margin-bottom:6px">
+        <b>${esc(a.title)}</b>
+        <button class="btn ghost small" data-del-ann="${a.id}">Delete</button>
+      </div>
+      <div style="font-size:14px;color:var(--ink2);line-height:1.55">${esc(a.body || '')}</div>
+      <div class="meta" style="margin-top:8px">${a.created_at ? esc(String(a.created_at).slice(0,10)) : ''}</div>
+    </div>`).join('');
+    document.querySelectorAll('[data-del-ann]').forEach(b => b.addEventListener('click', async () => {
+      if(!confirm('Delete this announcement?')) return;
+      await sb.from('announcements').delete().eq('id', b.dataset.delAnn);
+      toast('Announcement deleted'); loadAnnouncements();
+    }));
+  } catch(e){
+    box.innerHTML = `<div class="note">Could not load announcements: ${esc(e.message || String(e))}.<br>If the table is missing, run <b>ANNOUNCEMENTS.sql</b> in Supabase once.</div>`;
+  }
+}
+$('newAnnounce')?.addEventListener('click', () => {
+  showModal(`<h2>New announcement</h2>
+    <label>Title</label><input id="an_title" placeholder="Bikini Build starts Monday">
+    <label>Message</label><textarea id="an_body" rows="4" placeholder="Eight weeks, starting Monday. Get your before photo in and lock your spot."></textarea>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn" id="an_save">Send</button>
+      <button class="btn ghost" id="an_cancel">Cancel</button>
+    </div>`);
+  $('an_cancel').addEventListener('click', closeModal);
+  $('an_save').addEventListener('click', async () => {
+    const title = $('an_title').value.trim(), body = $('an_body').value.trim();
+    if(!title) return toast('Give it a title');
+    const { error } = await sb.from('announcements').insert({ title, body });
+    if(error) return toast(error.message);
+    closeModal(); toast('Announcement sent'); loadAnnouncements();
+  });
+});
+
+// ── WORKOUT VIDEOS ─────────────────────────────────────────
+const slug = (s) => String(s||'file').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+$('v_drop')?.addEventListener('click', () => $('v_file').click());
+['dragover','dragleave','drop'].forEach(ev => $('v_drop')?.addEventListener(ev, e => {
+  e.preventDefault();
+  $('v_drop').classList.toggle('over', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]){ $('v_file').files = e.dataTransfer.files; $('v_drop').textContent = e.dataTransfer.files[0].name; }
+}));
+$('v_file')?.addEventListener('change', e => { if(e.target.files[0]) $('v_drop').textContent = e.target.files[0].name; });
+
+$('v_upload')?.addEventListener('click', async () => {
+  const title = $('v_title').value.trim();
+  const file = $('v_file').files[0];
+  if(!title) return toast('Give the video a title');
+  if(!file) return toast('Choose a video file');
+  const bar = $('v_bar').firstElementChild;
+  bar.style.width = '35%';
+  try {
+    const path = `${Date.now()}-${slug(title)}.${(file.name.split('.').pop()||'mp4')}`;
+    const { error: upErr } = await sb.storage.from('videos').upload(path, file, { upsert: true, contentType: file.type });
+    if(upErr) throw upErr;
+    bar.style.width = '75%';
+    const { data: pub } = sb.storage.from('videos').getPublicUrl(path);
+    const row = { title, url: pub.publicUrl, video_url: pub.publicUrl };
+    if($('v_collection').value.trim()) row.collection = $('v_collection').value.trim();
+    if($('v_exercise').value.trim()) row.exercise_name = $('v_exercise').value.trim();
+    const { error } = await sb.from('videos').insert(row);
+    if(error) throw error;
+    bar.style.width = '100%';
+    toast('Video uploaded');
+    $('v_title').value=''; $('v_collection').value=''; $('v_exercise').value='';
+    $('v_file').value=''; $('v_drop').textContent = 'Click or drop a video here (mp4, mov)';
+    setTimeout(()=>{ bar.style.width='0'; }, 800);
+    loadVideos();
+  } catch(e){
+    bar.style.width = '0';
+    toast(e.message || 'Upload failed');
+  }
+});
+
+async function loadVideos(){
+  const box = $('videoList');
+  box.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  try {
+    const { data, error } = await sb.from('videos').select('*').order('sort_order', { ascending: true });
+    if(error) throw error;
+    if(!data || !data.length){ box.innerHTML = '<div class="note">No videos yet. Upload your first above.</div>'; return; }
+    box.innerHTML = `<div class="card">${data.map(v => `<div class="rrow">
+        <div style="flex:1">
+          <b>${esc(v.title || 'Untitled')}</b>
+          <div class="meta">${esc(v.collection || '')}${v.exercise_name ? ' · demo for ' + esc(v.exercise_name) : ''}</div>
+        </div>
+        <a class="btn ghost small" href="${esc(v.url || v.video_url || '#')}" target="_blank">Play</a>
+        <button class="btn ghost small" data-del-vid="${v.id}">Delete</button>
+      </div>`).join('')}</div>`;
+    document.querySelectorAll('[data-del-vid]').forEach(b => b.addEventListener('click', async () => {
+      if(!confirm('Delete this video?')) return;
+      await sb.from('videos').delete().eq('id', b.dataset.delVid);
+      toast('Video deleted'); loadVideos();
+    }));
+  } catch(e){
+    box.innerHTML = `<div class="note">Could not load videos: ${esc(e.message || String(e))}.<br>If it mentions permission or bucket, run <b>MEDIA_LIBRARY.sql</b> once.</div>`;
+  }
+}
+
+// ── RECIPE PHOTOS ──────────────────────────────────────────
+let allRecipes = [], pendingRecipeId = null;
+function renderRecipes(list){
+  const box = $('recipeList');
+  if(!list.length){ box.innerHTML = '<div class="note">No recipes match.</div>'; return; }
+  box.innerHTML = list.map(r => `<div class="rrow">
+      <img class="thumb" src="${esc(r.image_url || '')}" alt="">
+      <div style="flex:1"><b>${esc(r.title || r.name || 'Recipe')}</b>
+        <div class="meta">${r.image_url ? 'Has photo' : 'No photo yet'}</div></div>
+      <button class="btn ghost small" data-photo="${r.id}">${r.image_url ? 'Replace' : 'Add photo'}</button>
+    </div>`).join('');
+  document.querySelectorAll('[data-photo]').forEach(b => b.addEventListener('click', () => {
+    pendingRecipeId = b.dataset.photo; $('r_file').click();
+  }));
+}
+async function loadRecipes(){
+  const box = $('recipeList');
+  box.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  try {
+    const { data, error } = await sb.from('recipes').select('*').order('sort_order', { ascending: true }).limit(500);
+    if(error) throw error;
+    allRecipes = data || [];
+    renderRecipes(allRecipes);
+  } catch(e){
+    box.innerHTML = `<div class="note">Could not load recipes: ${esc(e.message || String(e))}.<br>If it mentions permission, run <b>MEDIA_LIBRARY.sql</b> once.</div>`;
+  }
+}
+$('recipeSearch')?.addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  renderRecipes(!q ? allRecipes : allRecipes.filter(r => String(r.title || r.name || '').toLowerCase().includes(q)));
+});
+$('r_file')?.addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if(!file || !pendingRecipeId) return;
+  try {
+    toast('Uploading photo...');
+    const path = `${pendingRecipeId}-${Date.now()}.${(file.name.split('.').pop()||'jpg')}`;
+    const { error: upErr } = await sb.storage.from('recipe-photos').upload(path, file, { upsert: true, contentType: file.type });
+    if(upErr) throw upErr;
+    const { data: pub } = sb.storage.from('recipe-photos').getPublicUrl(path);
+    const { error } = await sb.from('recipes').update({ image_url: pub.publicUrl }).eq('id', pendingRecipeId);
+    if(error) throw error;
+    toast('Photo added'); loadRecipes();
+  } catch(err){
+    toast(err.message || 'Upload failed');
+  } finally {
+    pendingRecipeId = null; e.target.value = '';
+  }
+});
+
+// ── PROGRESS PHOTOS ────────────────────────────────────────
+let photoFilterReady = false;
+async function loadPhotos(){
+  const grid = $('photoGrid');
+  const sel = $('photoChallenge');
+  grid.innerHTML = '<div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div>';
+  if(!photoFilterReady){
+    try {
+      const { data: chs } = await sb.from('challenges').select('id,title,starts_on,ends_on').order('starts_on', { ascending: false });
+      (chs || []).forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id; o.textContent = `${c.title} (${c.starts_on})`;
+        o.dataset.start = c.starts_on; o.dataset.end = c.ends_on;
+        sel.appendChild(o);
+      });
+    } catch(e){}
+    sel.addEventListener('change', loadPhotos);
+    photoFilterReady = true;
+  }
+  try {
+    let q = sb.from('progress_photos').select('id,user_id,date,path,pose,weight_kg').order('date', { ascending: false }).limit(300);
+    const opt = sel.selectedOptions[0];
+    if(sel.value !== 'all' && opt && opt.dataset.start){
+      q = q.gte('date', opt.dataset.start).lte('date', opt.dataset.end);
+    }
+    const { data: photos, error } = await q;
+    if(error) throw error;
+    if(!photos || !photos.length){
+      grid.innerHTML = '<div class="note">No progress photos for this selection yet.</div>';
+      return;
+    }
+    const ids = [...new Set(photos.map(p => p.user_id))];
+    let nameById = {};
+    try {
+      const { data: profs } = await sb.from('profiles_alter').select('id,name').in('id', ids);
+      (profs || []).forEach(p => { nameById[p.id] = p.name || 'Member'; });
+    } catch(e){}
+    // batch-sign all the private image paths in one call
+    let urlByPath = {};
+    try {
+      const { data: signed } = await sb.storage.from('progress').createSignedUrls(photos.map(p => p.path), 3600);
+      (signed || []).forEach(s => { if(s.signedUrl) urlByPath[s.path] = s.signedUrl; });
+    } catch(e){}
+    grid.innerHTML = photos.map(p => `
+      <div class="photo">
+        <img src="${urlByPath[p.path] || ''}" alt="" loading="lazy">
+        <div class="cap"><b>${esc(nameById[p.user_id] || 'Member')}</b><br>${esc(p.date)}${p.pose ? ' · ' + esc(p.pose) : ''}${p.weight_kg ? ' · ' + esc(p.weight_kg) + 'kg' : ''}</div>
+      </div>`).join('');
+  } catch(e){
+    grid.innerHTML = `<div class="note">Could not load photos: ${esc(e.message || String(e))}.<br>If it mentions permission, run <b>ADMIN_ACCESS.sql</b> (it includes the storage policy), then refresh.</div>`;
+  }
+}
+
+// ══ EVENTS ═════════════════════════════════════════════════
+async function loadEvents(){
+  const list = $('eventsList');
+  try {
+    const { data, error } = await sb.from('events').select('*').order('starts_on', { ascending: true });
+    if(error) throw error;
+    if(!data || !data.length){
+      list.innerHTML = emptyState('calendar', 'No events yet', 'Add your first event and it will show in the app.');
+      return;
+    }
+    list.innerHTML = data.map(ev => {
+      const past = ev.ends_on && ev.ends_on < todayStr();
+      return `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px">
+          <div>
+            <h3>${esc(ev.title)}</h3>
+            <div class="meta">${prettyDate(ev.starts_on)}${ev.location ? ' · ' + esc(ev.location) : ''}</div>
+          </div>
+          <span class="pill ${past ? 'ended' : 'live'}">${past ? 'Past' : 'Upcoming'}</span>
+        </div>
+        ${ev.description ? `<p style="margin-top:10px; color:var(--ink2); font-size:14px">${esc(ev.description)}</p>` : ''}
+        <div class="card-actions">
+          <button class="btn ghost small" data-edit-event='${esc(ev.id)}'>Edit</button>
+          <button class="btn danger small" data-del-event='${esc(ev.id)}'>Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-edit-event]').forEach(b => b.addEventListener('click', () => openEvent(data.find(e => e.id === b.dataset.editEvent))));
+    list.querySelectorAll('[data-del-event]').forEach(b => b.addEventListener('click', () => delEvent(b.dataset.delEvent)));
+  } catch(e){
+    list.innerHTML = emptyState('alert', 'Could not load', e.message);
+  }
+}
+
+$('newEvent').addEventListener('click', () => openEvent(null));
+
+function openEvent(ev){
+  const isNew = !ev;
+  showModal(`
+    <h2>${isNew ? 'Add event' : 'Edit event'}</h2>
+    <div class="sub">This shows in the app, and everyone gets a notification when a new one is added.</div>
+    <label>Title</label>
+    <input id="ev_title" value="${esc(ev?.title || '')}" placeholder="Pilates in the Park">
+    <label>Date</label>
+    <input id="ev_starts" type="date" value="${esc(ev?.starts_on || '')}">
+    <label>End date (optional, for multi-day)</label>
+    <input id="ev_ends" type="date" value="${esc(ev?.ends_on || '')}">
+    <label>Location</label>
+    <input id="ev_location" value="${esc(ev?.location || '')}" placeholder="New Farm Park, Brisbane">
+    <label>Description</label>
+    <textarea id="ev_desc" placeholder="Free class, 40 spots. Bring a mat.">${esc(ev?.description || '')}</textarea>
+    <label>Photo URL (optional)</label>
+    <input id="ev_image" value="${esc(ev?.image_url || '')}" placeholder="https://...">
+    <label>Sign up link (optional)</label>
+    <input id="ev_signup" value="${esc(ev?.signup_url || '')}" placeholder="https://...">
+    <label>Sign up button text (optional)</label>
+    <input id="ev_signuplabel" value="${esc(ev?.signup_label || '')}" placeholder="Save my spot">
+    <button class="btn" id="ev_save" style="margin-top:22px">${isNew ? 'Add event' : 'Save changes'}</button>
+    <button class="btn ghost" id="ev_cancel" style="margin-top:10px">Cancel</button>
+  `);
+  $('ev_cancel').addEventListener('click', closeModal);
+  $('ev_save').addEventListener('click', async () => {
+    const payload = {
+      title: $('ev_title').value.trim(),
+      starts_on: $('ev_starts').value || null,
+      ends_on: $('ev_ends').value || null,
+      location: $('ev_location').value.trim() || null,
+      description: $('ev_desc').value.trim() || null,
+      image_url: $('ev_image').value.trim() || null,
+      signup_url: $('ev_signup').value.trim() || null,
+      signup_label: $('ev_signuplabel').value.trim() || null,
+    };
+    if(!payload.title){ toast('Give it a title.'); return; }
+    if(!payload.starts_on){ toast('Pick a date.'); return; }
+    const btn = $('ev_save'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+    try {
+      if(isNew){
+        const { error } = await sb.from('events').insert(payload);
+        if(error) throw error;
+        toast('Event added');
+      } else {
+        const { error } = await sb.from('events').update(payload).eq('id', ev.id);
+        if(error) throw error;
+        toast('Event saved');
+      }
+      closeModal(); loadEvents();
+    } catch(e){
+      toast(e.message || 'Could not save');
+      btn.disabled = false; btn.textContent = isNew ? 'Add event' : 'Save changes';
+    }
+  });
+}
+
+async function delEvent(id){
+  if(!confirm('Delete this event? This cannot be undone.')) return;
+  try {
+    const { error } = await sb.from('events').delete().eq('id', id);
+    if(error) throw error;
+    toast('Event deleted'); loadEvents();
+  } catch(e){ toast(e.message || 'Could not delete'); }
+}
+
+// ══ CHALLENGES ═════════════════════════════════════════════
+async function loadChallenges(){
+  const list = $('challengesList');
+  try {
+    const { data, error } = await sb.from('challenges').select('*').order('starts_on', { ascending: false });
+    if(error) throw error;
+    if(!data || !data.length){
+      list.innerHTML = emptyState('trophy', 'No challenges yet', 'Create your first monthly challenge.');
+      return;
+    }
+    list.innerHTML = data.map(ch => {
+      const now = todayStr();
+      const live = ch.starts_on <= now && ch.ends_on >= now;
+      const ended = ch.ends_on < now;
+      const status = live ? '<span class="pill live">Live</span>' : ended ? '<span class="pill ended">Ended</span>' : '<span class="pill">Upcoming</span>';
+      return `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px">
+          <div>
+            <h3>${esc(ch.title)}</h3>
+            <div class="meta">${prettyDate(ch.starts_on)} to ${prettyDate(ch.ends_on)}</div>
+            ${ch.prize ? `<div class="meta" style="margin-top:2px">Prize: ${esc(ch.prize)}</div>` : ''}
+          </div>
+          ${status}
+        </div>
+        <div class="card-actions">
+          <button class="btn small" data-entries='${esc(ch.id)}'>See entries and pick winner</button>
+          <button class="btn ghost small" data-edit-ch='${esc(ch.id)}'>Edit</button>
+          <button class="btn danger small" data-del-ch='${esc(ch.id)}'>Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-edit-ch]').forEach(b => b.addEventListener('click', () => openChallenge(data.find(c => c.id === b.dataset.editCh))));
+    list.querySelectorAll('[data-del-ch]').forEach(b => b.addEventListener('click', () => delChallenge(b.dataset.delCh)));
+    list.querySelectorAll('[data-entries]').forEach(b => b.addEventListener('click', () => openEntries(data.find(c => c.id === b.dataset.entries))));
+  } catch(e){
+    list.innerHTML = emptyState('alert', 'Could not load', e.message);
+  }
+}
+
+$('newChallenge').addEventListener('click', () => openChallenge(null));
+
+function openChallenge(ch){
+  const isNew = !ch;
+  showModal(`
+    <h2>${isNew ? 'Add challenge' : 'Edit challenge'}</h2>
+    <div class="sub">One a month works well. The prize goes to real work, never a random draw.</div>
+    <label>Title</label>
+    <input id="ch_title" value="${esc(ch?.title || '')}" placeholder="August strength challenge">
+    <label>Subtitle (optional)</label>
+    <input id="ch_subtitle" value="${esc(ch?.subtitle || '')}" placeholder="Build your base">
+    <label>Description</label>
+    <textarea id="ch_desc" placeholder="Complete 12 sessions this month.">${esc(ch?.description || '')}</textarea>
+    <label>Prize</label>
+    <input id="ch_prize" value="${esc(ch?.prize || '')}" placeholder="A free month, or ALTER merch">
+    <div class="grid2">
+      <div>
+        <label>Goal type</label>
+        <select id="ch_goaltype">
+          <option value="workouts"${ch?.goal_type==='workouts'?' selected':''}>Workouts completed</option>
+          <option value="habits"${ch?.goal_type==='habits'?' selected':''}>Habits kept</option>
+          <option value="volume"${ch?.goal_type==='volume'?' selected':''}>Total volume</option>
+        </select>
+      </div>
+      <div>
+        <label>Goal target</label>
+        <input id="ch_target" type="number" value="${esc(ch?.goal_target ?? '')}" placeholder="12">
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label>Starts</label><input id="ch_starts" type="date" value="${esc(ch?.starts_on || '')}"></div>
+      <div><label>Ends</label><input id="ch_ends" type="date" value="${esc(ch?.ends_on || '')}"></div>
+    </div>
+    <button class="btn" id="ch_save" style="margin-top:22px">${isNew ? 'Add challenge' : 'Save changes'}</button>
+    <button class="btn ghost" id="ch_cancel" style="margin-top:10px">Cancel</button>
+  `);
+  $('ch_cancel').addEventListener('click', closeModal);
+  $('ch_save').addEventListener('click', async () => {
+    const payload = {
+      title: $('ch_title').value.trim(),
+      subtitle: $('ch_subtitle').value.trim() || null,
+      description: $('ch_desc').value.trim() || null,
+      prize: $('ch_prize').value.trim() || null,
+      goal_type: $('ch_goaltype').value,
+      goal_target: Number($('ch_target').value) || 1,
+      starts_on: $('ch_starts').value || null,
+      ends_on: $('ch_ends').value || null,
+      active: true,
+    };
+    if(!payload.title){ toast('Give it a title.'); return; }
+    if(!payload.starts_on || !payload.ends_on){ toast('Set the start and end dates.'); return; }
+    const btn = $('ch_save'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+    try {
+      if(isNew){
+        const { error } = await sb.from('challenges').insert(payload);
+        if(error) throw error;
+        toast('Challenge added');
+      } else {
+        const { error } = await sb.from('challenges').update(payload).eq('id', ch.id);
+        if(error) throw error;
+        toast('Challenge saved');
+      }
+      closeModal(); loadChallenges();
+    } catch(e){
+      toast(e.message || 'Could not save');
+      btn.disabled = false; btn.textContent = isNew ? 'Add challenge' : 'Save changes';
+    }
+  });
+}
+
+async function delChallenge(id){
+  if(!confirm('Delete this challenge and all its entries? This cannot be undone.')) return;
+  try {
+    const { error } = await sb.from('challenges').delete().eq('id', id);
+    if(error) throw error;
+    toast('Challenge deleted'); loadChallenges();
+  } catch(e){ toast(e.message || 'Could not delete'); }
+}
+
+// ── ENTRIES + PICK WINNER ──────────────────────────────────
+async function openEntries(ch){
+  showModal(`<h2>${esc(ch.title)}</h2><div class="sub">Everyone who entered. Pick a winner from the ones who submitted a result.</div><div id="entriesBox"><div class="loading"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--sage)"></span></div></div><button class="btn ghost" id="en_close" style="margin-top:18px">Close</button>`);
+  $('en_close').addEventListener('click', closeModal);
+  try {
+    const { data, error } = await sb.from('challenge_entries').select('*').eq('challenge_id', ch.id).order('submitted_at', { ascending: false, nullsFirst: false });
+    if(error) throw error;
+    const box = $('entriesBox');
+    if(!data || !data.length){ box.innerHTML = `<p style="color:var(--ink3); padding:20px 0">Nobody has entered yet.</p>`; return; }
+    box.innerHTML = data.map(en => {
+      const initials = (en.display_name || '?').trim().slice(0,1).toUpperCase();
+      const submitted = en.submitted_at;
+      return `<div class="entry">
+        <div class="av">${esc(initials)}</div>
+        <div class="info">
+          <div class="nm">${esc(en.display_name || 'Member')} ${en.is_winner ? '<span class="pill win">Winner</span>' : ''}</div>
+          <div class="dt">${submitted ? 'Submitted a result' : (en.completed ? 'Completed' : 'Progress: ' + (en.progress ?? 0))}</div>
+          ${en.result_note ? `<div style="font-size:13.5px; color:var(--ink2); margin-top:4px">${esc(en.result_note)}</div>` : ''}
+        </div>
+        ${en.result_photo_url ? `<img class="result" src="${esc(en.result_photo_url)}" alt="Result">` : ''}
+        <button class="btn ${en.is_winner ? 'gold' : 'ghost'} small" data-win='${esc(en.id)}'>${en.is_winner ? 'Winner' : 'Pick'}</button>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-win]').forEach(b => b.addEventListener('click', () => pickWinner(ch.id, b.dataset.win)));
+  } catch(e){
+    $('entriesBox').innerHTML = `<p style="color:var(--bad); padding:20px 0">${esc(e.message)}</p>`;
+  }
+}
+
+async function pickWinner(challengeId, entryId){
+  try {
+    // clear any existing winner for this challenge, then set the new one
+    await sb.from('challenge_entries').update({ is_winner: false }).eq('challenge_id', challengeId);
+    const { error } = await sb.from('challenge_entries').update({ is_winner: true }).eq('id', entryId);
+    if(error) throw error;
+    toast('Winner picked');
+    // refresh the entries view
+    const { data: ch } = await sb.from('challenges').select('*').eq('id', challengeId).maybeSingle();
+    if(ch) openEntries(ch);
+  } catch(e){ toast(e.message || 'Could not set winner'); }
+}
+
+// ── MODAL + EMPTY ──────────────────────────────────────────
+function showModal(html){
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg'; bg.id = 'modalBg';
+  bg.innerHTML = `<div class="modal">${html}</div>`;
+  bg.addEventListener('click', e => { if(e.target === bg) closeModal(); });
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = $('modalBg'); if(m) m.remove(); }
+
+function emptyState(icon, title, sub){
+  const paths = {
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+  };
+  return `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${paths[icon]||''}</svg><h3 style="color:var(--ink2); margin-bottom:4px">${esc(title)}</h3><p>${esc(sub)}</p></div>`;
+}
+</script>
+</body>
+</html>
